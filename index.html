@@ -125,6 +125,21 @@
             z-index: 0;
             pointer-events: none;
         }
+        /* ---- Book content typography (data-driven volumes) ---- */
+        #leftContent p, #rightContent p { margin: 0 0 0.85em; line-height: 1.75; }
+        #leftContent p.pl-sub, #rightContent p.pl-sub { font-style: italic; opacity: .75; margin-top: -0.5em; }
+        #leftContent h2.pl-ch, #rightContent h2.pl-ch { font-family: 'Cinzel', serif; font-weight: 800; font-size: 1.2em; letter-spacing: .02em; margin: 0 0 .9em; padding-bottom: .4em; border-bottom: 1px solid currentColor; opacity: .92; }
+        #leftContent h3.pl-h2, #rightContent h3.pl-h2 { font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.05em; margin: 1.1em 0 .5em; }
+        #leftContent table.plt-table, #rightContent table.plt-table { width: 100%; border-collapse: collapse; margin: 0 0 1em; font-family: 'Fira Code', monospace; font-size: .7em; }
+        #leftContent table.plt-table td, #rightContent table.plt-table td { border: 1px solid rgba(148,163,184,.25); padding: 3px 6px; vertical-align: top; }
+        #leftContent table.plt-table tr:first-child td, #rightContent table.plt-table tr:first-child td { background: rgba(148,163,184,.08); }
+        .pl-titlepage { text-align: center; padding-top: 6%; }
+        .pl-tp-badge { font-family: 'Fira Code', monospace; font-size: .7em; letter-spacing: .25em; text-transform: uppercase; opacity: .6; margin-bottom: 1.2em; }
+        .pl-tp-title { font-family: 'Cinzel', serif; font-weight: 900; font-size: 1.9em; line-height: 1.15; margin: 0 0 .5em; }
+        .pl-tp-sub { font-style: italic; opacity: .8; font-size: .95em; max-width: 34em; margin: 0 auto 1.4em; }
+        .pl-tp-rule { width: 60px; height: 2px; background: currentColor; opacity: .4; margin: 0 auto 1.4em; }
+        .pl-tp-author { font-family: 'Cinzel', serif; letter-spacing: .06em; opacity: .9; margin: 0; }
+        .pl-tp-pub { font-family: 'Fira Code', monospace; font-size: .7em; letter-spacing: .2em; opacity: .5; margin-top: .6em; text-transform: uppercase; }
     </style>
 </head>
 <body class="h-full bg-pltDark text-slate-100 flex flex-col font-sans select-none overflow-x-hidden theme-cyber">
@@ -239,7 +254,7 @@
                     </div>
 
                     <!-- Left Page Content -->
-                    <div id="leftContent" class="flex-1 text-sm sm:text-base leading-relaxed space-y-4">
+                    <div id="leftContent" class="flex-1 text-sm sm:text-base leading-relaxed">
                         <!-- Populated by JS -->
                     </div>
 
@@ -256,7 +271,7 @@
                     </div>
 
                     <!-- Right Page Content -->
-                    <div id="rightContent" class="flex-1 text-sm sm:text-base leading-relaxed space-y-4">
+                    <div id="rightContent" class="flex-1 text-sm sm:text-base leading-relaxed">
                         <!-- Populated by JS -->
                     </div>
 
@@ -327,518 +342,27 @@
 
     <!-- Complete 10 Books Database -->
     <script>
-        const BOOKS_DATA = [
-            {
-                id: "street",
-                title: "The Scorer: Street",
-                subtitle: "The PLT Framework applied to street conversations — trust, loyalty, and debt.",
-                author: "Craig Jones / Little Bunny",
-                publisher: "PLT Press • The Scorer Series",
-                category: "The Scorer Series",
-                color: "#FF007A",
-                badge: "STREET DOCTRINE",
-                pages: [
-                    {
-                        title: "TITLE & EPIGRAPH",
-                        html: `
-                            <div class="h-full flex flex-col justify-center text-center space-y-4">
-                                <span class="text-xs font-mono tracking-widest text-pltCyan">PLT PRESS · FIRST EDITION</span>
-                                <h1 class="text-2xl sm:text-3xl font-cinzel font-black tracking-widest text-pltPink">THE SCORER<br><span class="text-white">STREET</span></h1>
-                                <p class="text-xs font-mono text-slate-400 max-w-sm mx-auto">The PLT Framework applied to the conversations that run the street — trust, loyalty, betrayal, and the cost of every word.</p>
-                                <div class="pt-6 border-t border-slate-800 text-xs font-mono text-slate-500">
-                                    Craig Jones (Little Bunny)<br>Copyright © Craig Jones / PLT Press
-                                </div>
-                            </div>
-                        `
-                    },
-                    {
-                        title: "INTRODUCTION: THE STREET IS A SCORED WORLD",
-                        html: `
-                            <h2 class="text-lg font-bold text-pltCyan font-cinzel">INTRODUCTION: The Street Is a Scored World</h2>
-                            <p class="italic text-slate-400 text-xs border-l-2 border-pltPink pl-3">"In the street, every word is a contract. Every silence is a statement. Every conversation is scored before the first sentence ends." — PLT Press</p>
-                            <p>Every professional world in the Scorer Series has stakes. The loan officer's call can cost a home. The cold caller's thirty seconds can cost a quarter. The street is different because in this world, the Tax of a miscalibrated conversation is not a lost deal. It is, at its extreme, a life.</p>
-                            <p>This is why the street is the most honest scored world available to study. In corporate environments, the true score is obscured by courtesy and institutional performance. In the street, the performance budget is zero.</p>
-                        `
-                    },
-                    {
-                        title: "THE STREET SCORE TRIAD",
-                        html: `
-                            <h2 class="text-lg font-bold text-pltPink font-cinzel">The Street Score Triad</h2>
-                            <p>The street runs on three things that map directly onto the PLT framework:</p>
-                            <div class="space-y-3 font-mono text-xs">
-                                <div class="p-3 bg-pltCard rounded-lg border-l-2 border-pltCyan">
-                                    <strong class="text-pltCyan">REPUTATION = PROFIT MADE PERMANENT.</strong> In most worlds Profit is spent or lost. In the street, it calcifies into reputation that precedes you into rooms you have not yet entered.
-                                </div>
-                                <div class="p-3 bg-pltCard rounded-lg border-l-2 border-pltPink">
-                                    <strong class="text-pltPink">LOYALTY = LOVE MADE BINDING.</strong> Not a sentiment, but a structural commitment. Loyalty means alignment when conditions are costly.
-                                </div>
-                                <div class="p-3 bg-pltCard rounded-lg border-l-2 border-amber-400">
-                                    <strong class="text-amber-400">DEBT = TAX BY ANOTHER NAME.</strong> Every obligation is known. Every slight is logged. Tax here does not compound quietly—it compounds loudly.
-                                </div>
-                            </div>
-                        `
-                    },
-                    {
-                        title: "THE EIGHT CHARACTERS",
-                        html: `
-                            <h2 class="text-lg font-bold text-pltCyan font-cinzel">The Eight Characters</h2>
-                            <ul class="text-xs space-y-2 text-slate-300">
-                                <li><strong class="text-white">THE CONNECT:</strong> The source above. Structural Profit; their Love and Tax determine long-term survival.</li>
-                                <li><strong class="text-white">THE PLUG:</strong> The middleman carrying intelligence. High score when accurate; double-carrying creates fatal Tax.</li>
-                                <li><strong class="text-white">THE BLOCK:</strong> Territory holder. Runs on genuine Love (protection) or fear alone (evaporates instantly).</li>
-                                <li><strong class="text-white">THE CUSTOMER:</strong> The foundation. Regard keeps them; extraction sends them elsewhere.</li>
-                                <li><strong class="text-white">THE WORKER:</strong> Ground exposure for least return. Underpaying while expecting Love is the highest-Tax account in the street.</li>
-                                <li><strong class="text-white">THE COMPETITOR:</strong> Adversarial and informational simultaneously. Reading them keeps information flowing.</li>
-                                <li><strong class="text-white">THE INFORMANT:</strong> Never random. Appears from an unaddressed, compounding Tax account.</li>
-                                <li><strong class="text-white">THE FAMILY:</strong> Love score made human. The ultimate motivation beneath the entire build.</li>
-                            </ul>
-                        `
-                    },
-                    {
-                        title: "THE CONNECT CALL: DEE & MARCUS",
-                        html: `
-                            <h2 class="text-lg font-bold text-pltPink font-cinzel">The Connect Call</h2>
-                            <p class="text-xs text-slate-400">Movement One — The Read</p>
-                            <div class="bg-pltDark p-3 rounded-xl border border-slate-800 text-xs font-mono space-y-2">
-                                <p><strong class="text-pltCyan">Dee:</strong> "They told me about you."</p>
-                                <p><strong class="text-slate-300">Marcus:</strong> "I appreciate that."</p>
-                                <p><strong class="text-pltCyan">Dee:</strong> "What do you need?"</p>
-                                <p><strong class="text-slate-300">Marcus:</strong> "Consistency. Not the biggest number. Something I can rely on. I'd rather have less that's always there than more that's sometimes there."</p>
-                            </div>
-                            <div class="mt-2 p-2 bg-pltCard rounded border border-pltCyan/30 text-[11px] font-mono">
-                                <strong>SCORE:</strong> PROFIT 72 (▲12) | LOVE 68 (▲10) | TAX 20 (▼6)<br>
-                                <span class="text-pltCyan">MOVE 03 — Intelligence Transfer:</span> Marcus established values over volume.
-                            </div>
-                        `
-                    },
-                    {
-                        title: "THE LOYALTY TEST & THE DEBT CONVERSATION",
-                        html: `
-                            <h2 class="text-lg font-bold text-pltCyan font-cinzel">The Debt Conversation</h2>
-                            <p class="text-xs text-slate-400">Devon owes Stone for six weeks. He has been unreachable for two.</p>
-                            <div class="bg-pltDark p-3 rounded-xl border border-slate-800 text-xs font-mono space-y-2">
-                                <p><strong class="text-amber-400">Stone:</strong> "Six weeks."</p>
-                                <p><strong class="text-slate-300">Devon:</strong> "I got hit. Somebody took the whole thing. I've been working to replace it... I thought I could fix it before you had to know. That was wrong."</p>
-                            </div>
-                            <div class="mt-2 p-2 bg-pltCard rounded border border-pltPink/30 text-[11px] font-mono">
-                                <strong>MOVE 05 — Ownership Move:</strong> Devon took full ownership without excuses. Profit recovered 10, Love recovered 12.
-                            </div>
-                            <p class="text-xs mt-3">Path Forward: Half now today, half in ten days. Specific terms prevent escalation.</p>
-                        `
-                    },
-                    {
-                        title: "THE WORKER CONVERSATION",
-                        html: `
-                            <h2 class="text-lg font-bold text-pltPink font-cinzel">The Worker Conversation</h2>
-                            <p class="text-xs text-slate-400">Jerome calls Khalil after three years of clean work.</p>
-                            <div class="bg-pltDark p-3 rounded-xl border border-slate-800 text-xs font-mono space-y-2">
-                                <p><strong class="text-pltCyan">Jerome:</strong> "What's it actually like out there right now?"</p>
-                                <p><strong class="text-slate-300">Khalil:</strong> "It's harder. Takes longer to move the same amount. We're hitting it, but it's costing more to hit."</p>
-                                <p><strong class="text-pltCyan">Jerome:</strong> "Three years clean is the rarest thing there is. I know what that costs. Your number stays the same."</p>
-                            </div>
-                            <div class="mt-2 p-2 bg-pltCard rounded border border-pltCyan/30 text-[11px] font-mono">
-                                <strong>SCORE:</strong> LOVE 94 (▲16) | TAX 10 (▼10)<br>
-                                Moves 04 & 05: Evidence Mirror + Ownership of awareness.
-                            </div>
-                        `
-                    },
-                    {
-                        title: "THE EXIT: HOW TO LEAVE CLEAN",
-                        html: `
-                            <h2 class="text-lg font-bold text-pltCyan font-cinzel">The Exit: Marcus & Dee</h2>
-                            <p class="text-xs text-slate-400">The most dangerous conversation in the street: walking away cleanly.</p>
-                            <div class="bg-pltDark p-3 rounded-xl border border-slate-800 text-xs font-mono space-y-2">
-                                <p><strong class="text-slate-300">Marcus:</strong> "I'm out. I have something I've been building on the side for three years — a legitimate thing. It's ready. I want to walk away while I can do it clean."</p>
-                                <p><strong class="text-pltCyan">Dee:</strong> "You were never short, never a problem. Build something real."</p>
-                            </div>
-                            <p class="text-xs mt-2 text-slate-400">The exit that ends with 'build something real' is earned through years of zero unacknowledged Tax.</p>
-                        `
-                    }
-                ]
-            },
-            {
-                id: "moves",
-                title: "The 9 Dominant PLT Moves",
-                subtitle: "Profit. Love. Tax. The Complete Doctrine for Reading and Winning Every Conversation.",
-                author: "Craig Jones / Little Bunny",
-                publisher: "PLT Press • The Scorer Series",
-                category: "Doctrine",
-                color: "#00F0FF",
-                badge: "CORE SYSTEM",
-                pages: [
-                    {
-                        title: "THE PLT SCORE TRIANGLE",
-                        html: `
-                            <div class="h-full flex flex-col justify-center text-center space-y-3">
-                                <span class="text-xs font-mono text-pltPink">THE EXECUTABLE DOCTRINE</span>
-                                <h1 class="text-2xl sm:text-3xl font-cinzel font-black text-pltCyan">THE 9 DOMINANT<br>PLT MOVES</h1>
-                                <p class="text-xs font-mono text-slate-400">Most people hear words. The scorer sees the score moving.</p>
-                                <div class="p-3 bg-pltCard rounded-xl border border-pltCyan/30 text-xs font-mono text-left space-y-1">
-                                    <p><strong>PROFIT:</strong> Leverage · Frame · Position</p>
-                                    <p><strong>LOVE:</strong> Trust · Credibility · Loyalty</p>
-                                    <p><strong>TAX:</strong> Risk · Exposure · Obligation</p>
-                                </div>
-                            </div>
-                        `
-                    },
-                    {
-                        title: "MOVES 01 & 02: FRAME RESET & HONEST STRIKE",
-                        html: `
-                            <div class="space-y-4">
-                                <div class="p-3 bg-pltCard rounded-xl border-l-4 border-pltCyan">
-                                    <h3 class="font-bold text-white font-mono text-sm">MOVE 01 · THE FRAME RESET</h3>
-                                    <p class="text-xs text-pltCyan">When to run: Profit is collapsing.</p>
-                                    <p class="text-xs text-slate-300 mt-1">Shift the category. Do not defend the attack on their ground. Move the ground it was taken on. "The question is not how the offer feels. It's what the market supports."</p>
-                                </div>
-                                <div class="p-3 bg-pltCard rounded-xl border-l-4 border-pltPink">
-                                    <h3 class="font-bold text-white font-mono text-sm">MOVE 02 · THE HONEST STRIKE</h3>
-                                    <p class="text-xs text-pltPink">When to run: Love is burning or fragile.</p>
-                                    <p class="text-xs text-slate-300 mt-1">Tell the difficult truth before it becomes a surprise. Voluntary disclosure before discovery builds invincible credibility.</p>
-                                </div>
-                            </div>
-                        `
-                    },
-                    {
-                        title: "MOVES 03 & 04: INTEL TRANSFER & EVIDENCE MIRROR",
-                        html: `
-                            <div class="space-y-4">
-                                <div class="p-3 bg-pltCard rounded-xl border-l-4 border-amber-400">
-                                    <h3 class="font-bold text-white font-mono text-sm">MOVE 03 · THE INTELLIGENCE TRANSFER</h3>
-                                    <p class="text-xs text-amber-400">When to run: Client needs leverage.</p>
-                                    <p class="text-xs text-slate-300 mt-1">Give critical information before you are asked. Solves problems upfront and anchors both Profit and Love.</p>
-                                </div>
-                                <div class="p-3 bg-pltCard rounded-xl border-l-4 border-emerald-400">
-                                    <h3 class="font-bold text-white font-mono text-sm">MOVE 04 · THE EVIDENCE MIRROR</h3>
-                                    <p class="text-xs text-emerald-400">When to run: Irrational emotional anchor.</p>
-                                    <p class="text-xs text-slate-300 mt-1">Let them reach the conclusion themselves. Hand them the data and ask what they see. People defend conclusions they discovered.</p>
-                                </div>
-                            </div>
-                        `
-                    },
-                    {
-                        title: "MOVES 05 & 06: OWNERSHIP & PRESSURE REVEAL",
-                        html: `
-                            <div class="space-y-4">
-                                <div class="p-3 bg-pltCard rounded-xl border-l-4 border-rose-500">
-                                    <h3 class="font-bold text-white font-mono text-sm">MOVE 05 · THE OWNERSHIP MOVE</h3>
-                                    <p class="text-xs text-rose-400">When to run: Mistake made; credibility slipped.</p>
-                                    <p class="text-xs text-slate-300 mt-1">Own the error immediately without explanation. "That was on me." Fastest Love recovery in human dialogue.</p>
-                                </div>
-                                <div class="p-3 bg-pltCard rounded-xl border-l-4 border-purple-400">
-                                    <h3 class="font-bold text-white font-mono text-sm">MOVE 06 · THE PRESSURE REVEAL</h3>
-                                    <p class="text-xs text-purple-400">When to run: Words do not match behavior.</p>
-                                    <p class="text-xs text-slate-300 mt-1">Name the invisible pressure shaping the room. Surface the hidden stress so the real negotiation can begin.</p>
-                                </div>
-                            </div>
-                        `
-                    },
-                    {
-                        title: "MOVES 07, 08, 09: FAMILY, PATIENCE & PATH FORWARD",
-                        html: `
-                            <div class="space-y-3 font-mono text-xs">
-                                <div class="p-2.5 bg-pltCard rounded border-l-2 border-pltCyan">
-                                    <strong class="text-white">07 · FAMILY INCLUSION:</strong> Bring the invisible stakeholder into the room before they kill the deal at dinner.
-                                </div>
-                                <div class="p-2.5 bg-pltCard rounded border-l-2 border-pltPink">
-                                    <strong class="text-white">08 · THE PATIENCE PLAY:</strong> Silence under pressure. The first person to fill the silence surrenders leverage.
-                                </div>
-                                <div class="p-2.5 bg-pltCard rounded border-l-2 border-emerald-400">
-                                    <strong class="text-white">09 · THE PATH FORWARD:</strong> When stalled, give a concrete next step. People follow whoever creates forward movement.
-                                </div>
-                            </div>
-                        `
-                    }
-                ]
-            },
-            {
-                id: "realestate",
-                title: "The Scorer: Real Estate",
-                subtitle: "How to Read and Score Every Conversation in the Transaction.",
-                author: "Craig Jones / Little Bunny",
-                publisher: "PLT Press • The Scorer Series",
-                category: "Career Edition",
-                color: "#10B981",
-                badge: "REAL ESTATE",
-                pages: [
-                    {
-                        title: "THE TRANSACTION NOBODY SEES",
-                        html: `
-                            <h2 class="text-lg font-bold text-emerald-400 font-cinzel">The Invisible Transaction</h2>
-                            <p>A real estate transaction is not a property exchange. It is a web of scored conversations between six characters:</p>
-                            <div class="grid grid-cols-2 gap-2 text-xs font-mono my-3">
-                                <div class="p-2 bg-pltCard rounded border border-slate-800">The Buyer</div>
-                                <div class="p-2 bg-pltCard rounded border border-slate-800">The Seller</div>
-                                <div class="p-2 bg-pltCard rounded border border-slate-800">The Agent</div>
-                                <div class="p-2 bg-pltCard rounded border border-slate-800">The Loan Officer</div>
-                                <div class="p-2 bg-pltCard rounded border border-slate-800">The BDM</div>
-                                <div class="p-2 bg-pltCard rounded border border-slate-800">The Family</div>
-                            </div>
-                            <p class="text-xs text-slate-400">Every deal that falls apart collapses for one of three reasons: Profit collapsed, Love burned, or Tax became unbearable.</p>
-                        `
-                    },
-                    {
-                        title: "THE LISTING APPOINTMENT: JORDAN & KELLERMAN",
-                        html: `
-                            <h2 class="text-lg font-bold text-emerald-400 font-cinzel">The Listing Appointment</h2>
-                            <div class="bg-pltDark p-3 rounded-xl border border-slate-800 text-xs font-mono space-y-2">
-                                <p><strong class="text-slate-400">Mr. Kellerman:</strong> "The last agent told us we could get 780."</p>
-                                <p><strong class="text-emerald-400">Jordan:</strong> "I'd be concerned about an agent who told you that before seeing the comps together."</p>
-                                <p><strong class="text-emerald-400">Jordan:</strong> "Let me show you the last six months of sales on your block and you tell me what number you see."</p>
-                            </div>
-                            <div class="mt-2 p-2 bg-pltCard rounded border border-emerald-400/30 text-[11px] font-mono">
-                                <strong>MOVE 04 — Evidence Mirror:</strong> Jordan transferred pricing conclusion to the seller. They own the number now. Listing won.
-                            </div>
-                        `
-                    }
-                ]
-            },
-            {
-                id: "bdm",
-                title: "The Scorer: BDM",
-                subtitle: "How to Read and Score Every Conversation in Business Development.",
-                author: "Craig Jones / Little Bunny",
-                publisher: "PLT Press • The Scorer Series",
-                category: "Career Edition",
-                color: "#F59E0B",
-                badge: "BUSINESS DEV",
-                pages: [
-                    {
-                        title: "THE PIPELINE AS A LEDGER",
-                        html: `
-                            <h2 class="text-lg font-bold text-amber-400 font-cinzel">The Long Game Ledger</h2>
-                            <p>The BDM does not close deals. The BDM creates the conditions in which deals become inevitable.</p>
-                            <p class="text-xs text-slate-400 mt-2">The BDM score runs on months and quarters, not minutes. A single lunch deposits into Love and Profit that resolves into revenue six months later.</p>
-                            <div class="mt-4 p-3 bg-pltCard rounded-xl border-l-4 border-amber-400 text-xs font-mono">
-                                <strong>THE BDM SIGNATURE MOVE:</strong> Move 03 — Intelligence Transfer. Bringing unasked-for, timely market data to partners before anyone else.
-                            </div>
-                        `
-                    },
-                    {
-                        title: "THE DIFFICULT CALL: Nguyen File",
-                        html: `
-                            <h2 class="text-lg font-bold text-amber-400 font-cinzel">The Difficult Partner Call</h2>
-                            <p class="text-xs text-slate-400">Attorney Sandra calls BDM Jordan after communication dropped on a referred file.</p>
-                            <div class="bg-pltDark p-3 rounded-xl border border-slate-800 text-xs font-mono space-y-2">
-                                <p><strong class="text-slate-400">Jordan:</strong> "I know. The communication was not what it should have been and that is on my team. Here is what happened, and here is our new 3-file maximum to prevent it."</p>
-                            </div>
-                            <div class="mt-2 p-2 bg-pltCard rounded border border-amber-400/30 text-[11px] font-mono">
-                                <strong>SCORE:</strong> LOVE 80 (▲20). Ownership before complaint saves the referral channel.
-                            </div>
-                        `
-                    }
-                ]
-            },
-            {
-                id: "politics",
-                title: "The Scorer: Politics",
-                subtitle: "How to Read and Score Every Conversation in the Political Arena.",
-                author: "Craig Jones / Little Bunny",
-                publisher: "PLT Press • The Scorer Series",
-                category: "Career Edition",
-                color: "#6366F1",
-                badge: "POLITICS",
-                pages: [
-                    {
-                        title: "THE POLITICAL ARENA",
-                        html: `
-                            <h2 class="text-lg font-bold text-indigo-400 font-cinzel">The Arena of Simultaneous Scores</h2>
-                            <p>Every political career lives and dies in conversation. Candidate, Voter, Donor, Opponent, Media, Advisor, Family.</p>
-                            <p class="text-xs text-slate-400 mt-2">Voters decide on Love first and justify with policy second. The candidate who feels seen wins over the candidate who is merely correct on policy.</p>
-                        `
-                    },
-                    {
-                        title: "THE TOWN HALL & DEBATE REFRAME",
-                        html: `
-                            <h2 class="text-lg font-bold text-indigo-400 font-cinzel">The Debate Counterattack</h2>
-                            <div class="bg-pltDark p-3 rounded-xl border border-slate-800 text-xs font-mono space-y-2">
-                                <p><strong class="text-slate-400">Opponent:</strong> "My opponent voted against the infrastructure bill three times."</p>
-                                <p><strong class="text-indigo-400">Candidate:</strong> "What my opponent calls voting against a bill, voters call reading what's in it. The question is not how many times I voted — it's what actually got built."</p>
-                            </div>
-                            <div class="mt-2 p-2 bg-pltCard rounded border border-indigo-400/30 text-[11px] font-mono">
-                                <strong>MOVE 01 — Frame Reset:</strong> Reframed opposition count into proof of diligence. Profit +20.
-                            </div>
-                        `
-                    }
-                ]
-            },
-            {
-                id: "loanofficer",
-                title: "The Scorer: Loan Officer",
-                subtitle: "How to Read and Score Every Conversation That Holds the Transaction Together.",
-                author: "Craig Jones / Little Bunny",
-                publisher: "PLT Press • The Scorer Series",
-                category: "Career Edition",
-                color: "#38BDF8",
-                badge: "MORTGAGE LO",
-                pages: [
-                    {
-                        title: "THE INVISIBLE LOAD-BEARER",
-                        html: `
-                            <h2 class="text-lg font-bold text-sky-400 font-cinzel">The Highest-Tax Professional</h2>
-                            <p>Everyone is watching the house. The loan officer is watching the deal. When the LO's score collapses, the house no longer matters.</p>
-                            <p class="text-xs text-slate-400 mt-2">The LO's signature move is Move 02 (Honest Strike): naming conditions and variables before they surface in panic emails.</p>
-                        `
-                    },
-                    {
-                        title: "THE CONDITION CALL",
-                        html: `
-                            <h2 class="text-lg font-bold text-sky-400 font-cinzel">Managing Underwriting Conditions</h2>
-                            <div class="bg-pltDark p-3 rounded-xl border border-slate-800 text-xs font-mono space-y-2">
-                                <p><strong class="text-sky-400">Sandra:</strong> "Calling before you see the email. Underwriting added a documentation condition regarding your start date on the HR letter. Not a qualification issue. Timeline unchanged."</p>
-                                <p><strong class="text-slate-300">Buyer:</strong> "That's it? Just the start date?"</p>
-                            </div>
-                            <div class="mt-2 p-2 bg-pltCard rounded border border-sky-400/30 text-[11px] font-mono">
-                                Calling before the email converts panic Tax into managed process. Love +10.
-                            </div>
-                        `
-                    }
-                ]
-            },
-            {
-                id: "relationships",
-                title: "The Scorer: Relationships",
-                subtitle: "How to Read and Score the Conversations That Actually Shape Your Life.",
-                author: "Craig Jones / Little Bunny",
-                publisher: "PLT Press • The Scorer Series",
-                category: "Human Edition",
-                color: "#EC4899",
-                badge: "HUMAN EDITION",
-                pages: [
-                    {
-                        title: "THE KITCHEN DISHES AT 10:47PM",
-                        html: `
-                            <h2 class="text-lg font-bold text-pink-400 font-cinzel">Conversation One: Marcus & Deja</h2>
-                            <p class="text-xs text-slate-400">10:47 PM. Three late nights. The dishes in the sink.</p>
-                            <div class="bg-pltDark p-3 rounded-xl border border-slate-800 text-xs font-mono space-y-2">
-                                <p><strong class="text-slate-300">Deja:</strong> "When you're home you're not really home. You're somewhere else and I don't know where that is."</p>
-                                <p><strong class="text-pink-400">Marcus:</strong> "You're right. I don't know where I am either. Work is not what I thought it would be and I've been carrying it without saying it."</p>
-                            </div>
-                            <div class="mt-2 p-2 bg-pltCard rounded border border-pink-400/30 text-[11px] font-mono">
-                                <strong>MOVES 02 & 05:</strong> Honest Strike met with immediate Ownership Move. Love jumps to 90.
-                            </div>
-                        `
-                    },
-                    {
-                        title: "THE SIBLINGS IN THE WAITING ROOM",
-                        html: `
-                            <h2 class="text-lg font-bold text-pink-400 font-cinzel">Conversation Four: Diane & Calvin</h2>
-                            <p class="text-xs text-slate-400">Hospital waiting room after mother's fall.</p>
-                            <div class="bg-pltDark p-3 rounded-xl border border-slate-800 text-xs font-mono space-y-2">
-                                <p><strong class="text-slate-300">Calvin:</strong> "Tell me what the last three years looked like. I mean it. Tell me what you've been carrying."</p>
-                                <p><strong class="text-pink-400">Diane:</strong> "She started forgetting things in order. I've been meaning to talk to you for six months."</p>
-                                <p><strong class="text-slate-300">Calvin:</strong> "I can come for six weeks. Let's do it together."</p>
-                            </div>
-                        `
-                    }
-                ]
-            },
-            {
-                id: "internal",
-                title: "The Internal Scorer",
-                subtitle: "The scored monologue. What you tell yourself before the hard conversation.",
-                author: "Craig Jones / Little Bunny",
-                publisher: "PLT Press • The PLT Doctrine Series",
-                category: "Solo Performance",
-                color: "#A855F7",
-                badge: "INTERNAL MONOLOGUE",
-                pages: [
-                    {
-                        title: "THE ROOM BEFORE THE ROOM",
-                        html: `
-                            <h2 class="text-lg font-bold text-purple-400 font-cinzel">The Internal Architecture of Delay</h2>
-                            <p class="italic text-xs text-slate-400 border-l-2 border-purple-400 pl-3">"You have never lied to anyone as consistently or as creatively as you have lied to yourself about why this is not the right time."</p>
-                            <div class="space-y-2 text-xs font-mono mt-3">
-                                <div class="p-2 bg-pltCard rounded"><strong>1. The Logistics Exit:</strong> "I'll wait until dinner."</div>
-                                <div class="p-2 bg-pltCard rounded"><strong>2. The Protective Condition:</strong> "She might not be in the mood."</div>
-                                <div class="p-2 bg-pltCard rounded"><strong>3. The Preparation Infinite Loop:</strong> "Let me figure out the exact wording first."</div>
-                            </div>
-                        `
-                    },
-                    {
-                        title: "THE TURN: EMPATHY BREAKS THE LOOP",
-                        html: `
-                            <h2 class="text-lg font-bold text-purple-400 font-cinzel">The Turn: Empathy Breaks Delay</h2>
-                            <p class="text-xs">Renee sits alone. She realizes:</p>
-                            <blockquote class="text-xs font-mono bg-pltDark p-3 rounded border border-purple-500/30 text-purple-300">
-                                "If I were her, watching me go quiet for three weeks — that would be harder than anything I'm about to say. Go say it."
-                            </blockquote>
-                            <p class="text-xs mt-3">Profit builds 26, Love builds 30, Tax drops 36. The conversation does not need to be perfect; it needs to happen.</p>
-                        `
-                    }
-                ]
-            },
-            {
-                id: "dealer",
-                title: "Conversations of a Dealer",
-                subtitle: "Real conversations. Real weight. What human exchange looks like without the courtesy layer.",
-                author: "Craig Jones / Little Bunny",
-                publisher: "PLT Press • Creative Non-Fiction",
-                category: "Creative Non-Fiction",
-                color: "#E11D48",
-                badge: "MEMOIR / OBSERVATION",
-                pages: [
-                    {
-                        title: "THE FIRST CUSTOMER: ANDRE",
-                        html: `
-                            <h2 class="text-lg font-bold text-rose-500 font-cinzel">Andre's Clean Terms</h2>
-                            <p class="text-xs text-slate-400">What I learned in the first week about clean transactional boundaries.</p>
-                            <div class="bg-pltDark p-3 rounded-xl border border-slate-800 text-xs font-mono space-y-2">
-                                <p><strong class="text-rose-400">Andre:</strong> "I pay what things are worth. Not more, because I'm not trying to buy goodwill. Not less, because I'm not that kind of person. If something is wrong I'll tell you directly."</p>
-                            </div>
-                            <p class="text-xs mt-3">The person who tells you exactly how they want to operate at the beginning gives you the highest-value favor: predictability.</p>
-                        `
-                    },
-                    {
-                        title: "THE PROFESSOR & RENEE",
-                        html: `
-                            <h2 class="text-lg font-bold text-rose-500 font-cinzel">The Professor's Question</h2>
-                            <div class="bg-pltDark p-3 rounded-xl border border-slate-800 text-xs font-mono space-y-2">
-                                <p><strong class="text-slate-300">Professor:</strong> "Do you think I have a problem?"</p>
-                                <p><strong class="text-rose-400">Me:</strong> "Yes. The kind where you organize your week around this."</p>
-                            </div>
-                            <p class="text-xs mt-3 font-mono text-slate-400"><strong>Renee's Law:</strong> "The reason people don't trust each other is not that they've been betrayed. It's that they've been right too many times about knowing they would be."</p>
-                        `
-                    }
-                ]
-            },
-            {
-                id: "pope",
-                title: "Pope: What He Felt First",
-                subtitle: "He always felt things before he understood them. That was his gift and his whole problem.",
-                author: "Craig Jones / Little Bunny",
-                publisher: "PLT Press • Book IX",
-                category: "Fiction / Origin",
-                color: "#8B5CF6",
-                badge: "ORIGIN STORY",
-                pages: [
-                    {
-                        title: "THE PRIOR HOUR AT 6 AM",
-                        html: `
-                            <h2 class="text-lg font-bold text-purple-400 font-cinzel">The Prior Hour</h2>
-                            <p>The first thing Pope ever felt that he could not name was the specific quality of the air on his block at six in the morning, before the day began its noise.</p>
-                            <p class="text-xs text-slate-400 mt-2">Simone named it for him years later: "The word you're looking for is prior. That's the hour before the world assigns its meanings."</p>
-                            <p class="text-xs mt-3">At 14, Dwayne asked him to hold money. Pope said No twice. The decision landed as permanent clarity.</p>
-                        `
-                    },
-                    {
-                        title: "MEETING BRASI & THE EXIT",
-                        html: `
-                            <h2 class="text-lg font-bold text-purple-400 font-cinzel">Meeting Brasi in the Gym</h2>
-                            <p class="text-xs text-slate-400">Seventeen. In the gym where Pope worked on his mind.</p>
-                            <div class="bg-pltDark p-3 rounded-xl border border-slate-800 text-xs font-mono space-y-2">
-                                <p><strong class="text-purple-300">Brasi:</strong> "What are you working on?"</p>
-                                <p><strong class="text-slate-300">Pope:</strong> "My mind. The gym is where I can hear it."</p>
-                                <p><strong class="text-purple-300">Brasi:</strong> "Show me."</p>
-                            </div>
-                            <p class="text-xs mt-3 text-slate-400">Brasi provided steadiness; Pope provided the thinking. When Pope exited, Brasi told him: "Build something that stays."</p>
-                        `
-                    }
-                ]
-            }
-        ];
+        // ---- Data-driven library (lazy loaded from ./data/) ----
+        let MANIFEST = [];
+        let currentBook = null;
+        let currentBookId = null;
+        const BOOK_CACHE = {};
+
+        async function getBook(id) {
+            if (BOOK_CACHE[id]) return BOOK_CACHE[id];
+            const res = await fetch('data/book-' + id + '.json');
+            if (!res.ok) throw new Error('book load failed: ' + id);
+            const b = await res.json();
+            BOOK_CACHE[id] = b;
+            return b;
+        }
+
+        async function loadManifest() {
+            const res = await fetch('data/manifest.json');
+            MANIFEST = await res.json();
+        }
 
         // State Management
-        let currentBookIndex = 0;
         let currentPageIndex = 0; // index of left page (left: page, right: page + 1)
         let fontSize = 15; // default px
         let soundEnabled = true;
@@ -902,7 +426,8 @@
 
         // Initialize Book Spread Renderer
         function renderSpread() {
-            const book = BOOKS_DATA[currentBookIndex];
+            const book = currentBook;
+            if (!book) return;
             const totalPages = book.pages.length;
 
             // Ensure even left-page indexing
@@ -963,7 +488,7 @@
         }
 
         function nextPage() {
-            const book = BOOKS_DATA[currentBookIndex];
+            const book = currentBook;
             if (currentPageIndex + 2 < book.pages.length) {
                 playPageTurnSound();
                 animatePageFlip(1);
@@ -989,12 +514,24 @@
             }, 300);
         }
 
-        function selectBook(index, targetPage = 0) {
-            currentBookIndex = index;
-            currentPageIndex = targetPage;
+        async function selectBook(id, targetPage = 0) {
             playGlitchClickSound();
             closeShelf();
-            renderSpread();
+            await openBook(id, targetPage);
+        }
+
+        async function openBook(id, targetPage = 0) {
+            if (!id) return;
+            try {
+                currentBook = await getBook(id);
+                currentBookId = id;
+                currentPageIndex = targetPage || 0;
+                renderSpread();
+            } catch (e) {
+                console.error(e);
+                document.getElementById('leftContent').innerHTML =
+                    '<div class="h-full flex items-center justify-center text-red-400 font-mono text-xs">COULD NOT LOAD VOLUME</div>';
+            }
         }
 
         // Render Shelf Carousel Modal
@@ -1002,7 +539,7 @@
             const grid = document.getElementById('booksGrid');
             grid.innerHTML = "";
 
-            BOOKS_DATA.forEach((b, idx) => {
+            MANIFEST.forEach((b) => {
                 const searchStr = `${b.title} ${b.author} ${b.badge} ${b.category}`.toLowerCase();
                 if (filter && !searchStr.includes(filter.toLowerCase())) return;
 
@@ -1012,7 +549,7 @@
                     <div class="space-y-2">
                         <div class="flex items-center justify-between text-[10px] font-mono">
                             <span class="px-2 py-0.5 rounded bg-slate-800 text-pltCyan font-bold">${b.badge}</span>
-                            <span class="text-slate-500">${b.pages.length} PAGES</span>
+                            <span class="text-slate-500">${b.pages} PAGES</span>
                         </div>
                         <h4 class="font-cinzel font-bold text-white text-base group-hover:text-pltCyan transition-colors">${b.title}</h4>
                         <p class="text-xs text-slate-400 line-clamp-2">${b.subtitle}</p>
@@ -1022,14 +559,14 @@
                         <i class="fa-solid fa-arrow-right text-pltCyan opacity-0 group-hover:opacity-100 transition-opacity"></i>
                     </div>
                 `;
-                card.onclick = () => selectBook(idx, 0);
+                card.onclick = () => selectBook(b.id, 0);
                 grid.appendChild(card);
             });
         }
 
         // Render Table of Contents
         function renderTOC() {
-            const book = BOOKS_DATA[currentBookIndex];
+            const book = currentBook;
             document.getElementById('tocBookTitle').innerText = book.title;
             const tocList = document.getElementById('tocList');
             tocList.innerHTML = "";
@@ -1053,26 +590,22 @@
 
         // Deep URL Linking for Substack
         function updateHash() {
-            const book = BOOKS_DATA[currentBookIndex];
+            const book = currentBook;
             window.location.hash = `book=${book.id}&page=${currentPageIndex + 1}`;
         }
 
-        function loadFromHash() {
+        async function loadFromHash() {
             const hash = window.location.hash.substring(1);
-            if (!hash) return;
-            const params = new URLSearchParams(hash);
-            const bookId = params.get('book');
-            const pageNum = parseInt(params.get('page'), 10);
-
-            if (bookId) {
-                const bIdx = BOOKS_DATA.findIndex(b => b.id === bookId);
-                if (bIdx !== -1) {
-                    currentBookIndex = bIdx;
-                    if (!isNaN(pageNum) && pageNum >= 1) {
-                        currentPageIndex = Math.max(0, (pageNum - 1) - ((pageNum - 1) % 2));
-                    }
-                }
+            let id = MANIFEST.length ? MANIFEST[0].id : null;
+            let page = 0;
+            if (hash) {
+                const params = new URLSearchParams(hash);
+                const bookId = params.get('book');
+                const pageNum = parseInt(params.get('page'), 10);
+                if (bookId && MANIFEST.some(b => b.id === bookId)) id = bookId;
+                if (!isNaN(pageNum) && pageNum >= 1) page = Math.max(0, (pageNum - 1) - ((pageNum - 1) % 2));
             }
+            await openBook(id, page);
         }
 
         // Theme Switcher
@@ -1181,10 +714,10 @@
         });
 
         // Event Listeners Initialization
-        window.onload = function () {
+        window.onload = async function () {
             init3D();
-            loadFromHash();
-            renderSpread();
+            try { await loadManifest(); } catch (e) { console.error('manifest load failed', e); }
+            await loadFromHash();
 
             // Next & Prev Buttons
             document.getElementById('nextPageBtn').addEventListener('click', nextPage);
