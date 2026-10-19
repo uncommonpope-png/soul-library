@@ -8,6 +8,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Three.js r128 post-processing (EffectComposer + UnrealBloom + FXAA) for neon bloom -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/FXAAShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Google Fonts -->
@@ -401,6 +409,8 @@
                 filter.connect(gain);
                 gain.connect(audioCtx.destination);
                 noise.start();
+                // pulse the 3D particle field on page turn
+                audioReactive = 1;
             } catch (e) {
                 console.warn('Audio FX error:', e);
             }
@@ -633,84 +643,231 @@
             playGlitchClickSound();
         }
 
-        // Three.js 3D Futuristic Cyber Library Scene
-        let scene, camera, renderer, particles, runes = [];
+        // Three.js 3D Futuristic Cyber Library Scene — Bloom + GPU Particles
+        let scene, camera, renderer, composer, clock, particles, runes = [];
+        let audioReactive = 0; // 0..1, pulses on page turns
 
         function init3D() {
             const canvas = document.getElementById('bgCanvas');
             scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x05050a, 0.018);
+            clock = new THREE.Clock();
+
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 25;
+            camera.position.set(0, 0, 28);
 
             renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.15;
 
-            // Ambient lighting
-            const ambient = new THREE.AmbientLight(0x0a0a1a, 1.5);
-            scene.add(ambient);
-
-            const cyanLight = new THREE.PointLight(0x00F0FF, 2, 60);
-            cyanLight.position.set(-15, 10, 15);
+            // ---- Lighting ----
+            scene.add(new THREE.AmbientLight(0x0a0a1a, 1.2));
+            const cyanLight = new THREE.PointLight(0x00F0FF, 3.2, 120, 2);
+            cyanLight.position.set(-18, 12, 18);
             scene.add(cyanLight);
-
-            const pinkLight = new THREE.PointLight(0xFF007A, 2, 60);
-            pinkLight.position.set(15, -10, 15);
+            const pinkLight = new THREE.PointLight(0xFF007A, 3.2, 120, 2);
+            pinkLight.position.set(18, -12, 18);
             scene.add(pinkLight);
+            const keyLight = new THREE.DirectionalLight(0x8b5cf6, 0.6);
+            keyLight.position.set(0, 20, 10);
+            scene.add(keyLight);
 
-            // Floating Cyber Grid Dust Particles
-            const count = 400;
+            // ---- GPU particle field (custom shader: size attenuation + twinkle + per-vertex color) ----
+            const COUNT = 6000;
             const geo = new THREE.BufferGeometry();
-            const pos = new Float32Array(count * 3);
-            for (let i = 0; i < count * 3; i += 3) {
-                pos[i] = (Math.random() - 0.5) * 80;
-                pos[i + 1] = (Math.random() - 0.5) * 60;
-                pos[i + 2] = (Math.random() - 0.5) * 50;
+            const pos = new Float32Array(COUNT * 3);
+            const col = new Float32Array(COUNT * 3);
+            const rnd = new Float32Array(COUNT);      // per-particle random phase
+            const sz = new Float32Array(COUNT);       // per-particle size
+            const CYAN = new THREE.Color(0x00F0FF);
+            const PINK = new THREE.Color(0xFF007A);
+            const VIOLET = new THREE.Color(0x8b5cf6);
+            const tmp = new THREE.Color();
+            for (let i = 0; i < COUNT; i++) {
+                const i3 = i * 3;
+                // Distribute in a wide spherical shell for depth
+                const r = 12 + Math.pow(Math.random(), 0.6) * 46;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                pos[i3] = r * Math.sin(phi) * Math.cos(theta);
+                pos[i3 + 1] = r * Math.sin(phi) * Math.sin(theta) * 0.65;
+                pos[i3 + 2] = r * Math.cos(phi) * 0.9;
+                // Blend palette by vertical position
+                const t = (pos[i3 + 1] + 20) / 40;
+                tmp.copy(CYAN).lerp(PINK, THREE.MathUtils.clamp(t, 0, 1));
+                tmp.lerp(VIOLET, Math.random() * 0.35);
+                col[i3] = tmp.r; col[i3 + 1] = tmp.g; col[i3 + 2] = tmp.b;
+                rnd[i] = Math.random() * 6.2831;
+                sz[i] = 0.6 + Math.random() * 2.4;
             }
             geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-            const mat = new THREE.PointsMaterial({
-                size: 0.25,
-                color: 0x00F0FF,
+            geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+            geo.setAttribute('aRand', new THREE.BufferAttribute(rnd, 1));
+            geo.setAttribute('aSize', new THREE.BufferAttribute(sz, 1));
+
+            const pMat = new THREE.ShaderMaterial({
+                uniforms: {
+                    uTime: { value: 0 },
+                    uPulse: { value: 0 },
+                    uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) }
+                },
+                vertexShader: `
+                    attribute float aRand;
+                    attribute float aSize;
+                    uniform float uTime;
+                    uniform float uPulse;
+                    uniform float uPixelRatio;
+                    varying vec3 vColor;
+                    varying float vAlpha;
+                    void main() {
+                        vColor = color;
+                        vec3 p = position;
+                        // gentle orbital drift
+                        float ang = uTime * 0.03 + aRand;
+                        float s = sin(ang), c = cos(ang);
+                        p.xz = mat2(c, -s, s, c) * p.xz;
+                        // twinkle-driven size + page-turn pulse
+                        float tw = 0.5 + 0.5 * sin(uTime * 1.4 + aRand * 3.0);
+                        vec4 mv = modelViewMatrix * vec4(p, 1.0);
+                        gl_Position = projectionMatrix * mv;
+                        gl_PointSize = (aSize * (0.6 + tw) * (1.0 + uPulse * 0.8))
+                                       * uPixelRatio * (300.0 / -mv.z);
+                        vAlpha = 0.25 + 0.75 * tw;
+                    }
+                `,
+                fragmentShader: `
+                    varying vec3 vColor;
+                    varying float vAlpha;
+                    void main() {
+                        // soft round sprite with bright core for bloom
+                        vec2 uv = gl_PointCoord - vec2(0.5);
+                        float d = length(uv);
+                        if (d > 0.5) discard;
+                        float core = smoothstep(0.5, 0.0, d);
+                        float glow = pow(core, 1.6);
+                        gl_FragColor = vec4(vColor * (1.0 + glow * 0.8), glow * vAlpha);
+                    }
+                `,
                 transparent: true,
-                opacity: 0.45
+                depthWrite: false,
+                blending: THREE.AdditiveBlending,
+                vertexColors: true
             });
-            particles = new THREE.Points(geo, mat);
+            particles = new THREE.Points(geo, pMat);
             scene.add(particles);
 
-            // 3D Geometric Floating Rings & Cyber Sigils
-            const torusGeo = new THREE.TorusGeometry(12, 0.08, 16, 100);
-            const torusMat1 = new THREE.MeshBasicMaterial({ color: 0x00F0FF, wireframe: true, transparent: true, opacity: 0.2 });
-            const ring1 = new THREE.Mesh(torusGeo, torusMat1);
-            ring1.rotation.x = Math.PI / 3;
-            scene.add(ring1);
-            runes.push(ring1);
+            // ---- Concentric cyber rings (now lit + bloom-reactive) ----
+            const ringColors = [0x00F0FF, 0xFF007A, 0x8b5cf6];
+            for (let i = 0; i < 3; i++) {
+                const torusGeo = new THREE.TorusGeometry(10 + i * 3.2, 0.07, 20, 160);
+                const torusMat = new THREE.MeshStandardMaterial({
+                    color: ringColors[i],
+                    emissive: ringColors[i],
+                    emissiveIntensity: 1.6,
+                    metalness: 0.6,
+                    roughness: 0.3,
+                    transparent: true,
+                    opacity: 0.75
+                });
+                const ring = new THREE.Mesh(torusGeo, torusMat);
+                ring.rotation.x = Math.PI / (3 + i);
+                ring.rotation.y = Math.PI / (4 + i);
+                ring.userData.baseEmissive = 1.6;
+                scene.add(ring);
+                runes.push(ring);
+            }
 
-            const torusMat2 = new THREE.MeshBasicMaterial({ color: 0xFF007A, wireframe: true, transparent: true, opacity: 0.15 });
-            const ring2 = new THREE.Mesh(torusGeo, torusMat2);
-            ring2.rotation.y = Math.PI / 4;
-            scene.add(ring2);
-            runes.push(ring2);
-
+            buildComposer();
             animate3D();
+        }
+
+        // ---- Post-processing: UnrealBloom + FXAA (grabs the neon) ----
+        function buildComposer() {
+            if (typeof THREE.EffectComposer === 'undefined') return;
+            composer = new THREE.EffectComposer(renderer);
+            composer.addPass(new THREE.RenderPass(scene, camera));
+            const bloom = new THREE.UnrealBloomPass(
+                new THREE.Vector2(window.innerWidth, window.innerHeight),
+                0.85,   // strength
+                0.55,   // radius
+                0.12    // threshold (low so neon colors bloom)
+            );
+            composer.addPass(bloom);
+            if (THREE.FXAAShader && THREE.ShaderPass) {
+                const fxaa = new THREE.ShaderPass(THREE.FXAAShader);
+                fxaa.uniforms['resolution'].value.set(
+                    1 / window.innerWidth, 1 / window.innerHeight);
+                composer.addPass(fxaa);
+            }
+            window.__pltBloom = bloom; // exposed for tuning/debug
         }
 
         function animate3D() {
             requestAnimationFrame(animate3D);
-            if (particles) {
-                particles.rotation.y += 0.0006;
-                particles.rotation.x += 0.0003;
+            const t = clock.getElapsedTime();
+            const pMat = particles && particles.material;
+
+            if (pMat && pMat.uniforms) {
+                pMat.uniforms.uTime.value = t;
+                // decay the page-turn pulse
+                audioReactive += (0 - audioReactive) * 0.02;
+                pMat.uniforms.uPulse.value = audioReactive;
             }
             runes.forEach((r, i) => {
-                r.rotation.z += (i + 1) * 0.001;
+                r.rotation.z += (i + 1) * 0.0012;
+                r.rotation.x += 0.0004 * (i + 1);
+                if (r.material && r.material.emissiveIntensity !== undefined) {
+                    r.material.emissiveIntensity =
+                        r.userData.baseEmissive * (1 + 0.12 * Math.sin(t * 1.1 + i));
+                }
             });
-            renderer.render(scene, camera);
+            // subtle parallax camera sway
+            camera.position.x = Math.sin(t * 0.12) * 1.6;
+            camera.position.y = Math.cos(t * 0.09) * 1.1;
+            camera.lookAt(0, 0, 0);
+
+            if (composer) composer.render();
+            else renderer.render(scene, camera);
+
+            // debug probe: render 3x3 center pixels through composer into a readable buffer
+            if (window.__pltProbe && window.__pltProbeCount-- > 0) {
+                try {
+                    const w = 3, h = 3;
+                    const rt = new THREE.WebGLRenderTarget(w, h, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter });
+                    const buf = new Uint8Array(w * h * 4);
+                    renderer.setRenderTarget(rt);
+                    renderer.clear();
+                    renderer.render(scene, camera);   // direct scene render (not composer) for a stable probe
+                    renderer.readRenderTargetPixels(rt, 0, 0, w, h, buf);
+                    renderer.setRenderTarget(null);
+                    let mx = 0, lit = 0;
+                    for (let i = 0; i < buf.length; i += 4) {
+                        const l = buf[i] + buf[i+1] + buf[i+2];
+                        if (l > mx) mx = l;
+                        if (l > 30) lit++;
+                    }
+                    window.__pltProbeResult = { maxLum: mx, litPct: Math.round(100 * lit / (w * h)) };
+                    rt.dispose();
+                } catch (e) { window.__pltProbeResult = { error: String(e) }; }
+            }
         }
+
+        window.__pltProbeCount = 0;
+        window.__pltProbe = () => { window.__pltProbeCount = 1; window.__pltProbeResult = null; };
 
         window.addEventListener('resize', () => {
             if (!camera || !renderer) return;
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            if (composer) composer.setSize(window.innerWidth, window.innerHeight);
+            if (composer && typeof THREE !== 'undefined' && THREE.FXAAShader) {
+                // update FXAA res on the fly if present
+                const fxaa = composer.passes && composer.passes.find(p => p.uniforms && p.uniforms['resolution']);
+                if (fxaa) fxaa.uniforms['resolution'].value.set(1 / window.innerWidth, 1 / window.innerHeight);
+            }
         });
 
         // Event Listeners Initialization
