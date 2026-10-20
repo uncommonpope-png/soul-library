@@ -134,32 +134,77 @@ const PLTChess = (() => {
     return { x: (c - 3.5) * SQ, z: (3.5 - r) * SQ };
   }
 
+  // Each piece gets its own silhouette so a glance reads the board: pawn ball+collar,
+  // rook crenellated tower, knight arched head, bishop mitre with cut, queen crown, king cross.
   function makePieceMesh(p, t) {
     const g = new THREE.Group();
-    const col = t === 'w' ? 0xdffcff : 0x1a0a12;
-    const emi = t === 'w' ? 0x00F0FF : 0xFF007A;
-    const mat = new THREE.MeshStandardMaterial({
-      color: col, emissive: emi, emissiveIntensity: 0.55,
-      metalness: 0.85, roughness: 0.28
-    });
     const type = p.toLowerCase();
-    // base disc for all pieces
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.4, 0.14, 20), mat);
-    base.position.y = 0.07; g.add(base);
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.28, 0.42, 16), mat);
-    body.position.y = 0.3; g.add(body);
+    const light = t === 'w';
+    const mat = new THREE.MeshStandardMaterial({
+      color: light ? 0xf2feff : 0x2a0d1c,
+      emissive: light ? 0x00F0FF : 0xFF007A,
+      emissiveIntensity: light ? 0.48 : 0.40,
+      metalness: 0.9, roughness: 0.22
+    });
+    const dark = new THREE.MeshStandardMaterial({
+      color: light ? 0x9ff6ff : 0x52102e,
+      emissive: light ? 0x00F0FF : 0xFF007A,
+      emissiveIntensity: 0.72,
+      metalness: 0.85, roughness: 0.3
+    });
+    const put = (m, y) => { m.position.y = y; g.add(m); return m; };
 
-    let head = null;
-    if (type === 'p') head = new THREE.Mesh(new THREE.SphereGeometry(0.19, 16, 12), mat);
-    else if (type === 'r') { head = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.2, 0.26, 12), mat); head.position.y = 0.62; }
-    else if (type === 'n') { head = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.4, 0.34), mat); head.position.set(0.05, 0.62, 0.02); head.rotation.z = -0.35; }
-    else if (type === 'b') { head = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.42, 14), mat); head.position.y = 0.64; }
-    else if (type === 'q') { head = new THREE.Mesh(new THREE.SphereGeometry(0.26, 16, 12), mat); head.position.y = 0.66; }
-    else if (type === 'k') {
-      head = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.34, 0.1), mat); head.position.y = 0.68;
-      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.09, 0.09), mat); bar.position.y = 0.74; g.add(bar);
+    put(new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.46, 0.10, 24), dark), 0.05);
+    put(new THREE.Mesh(new THREE.CylinderGeometry(0.30, 0.38, 0.12, 20), mat), 0.15);
+
+    if (type === 'p') {
+      put(new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.22, 0.30, 16), mat), 0.36);
+      put(new THREE.Mesh(new THREE.TorusGeometry(0.155, 0.045, 10, 20), dark), 0.53);
+      put(new THREE.Mesh(new THREE.SphereGeometry(0.17, 18, 14), mat), 0.69);
+    } else if (type === 'r') {
+      put(new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.30, 0.50, 18), mat), 0.46);
+      put(new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.26, 0.12, 18), dark), 0.76);
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
+        const b = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.16, 0.14), mat);
+        b.position.set(Math.cos(a) * 0.21, 0.89, Math.sin(a) * 0.21);
+        g.add(b);
+      }
+    } else if (type === 'n') {
+      const neck = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.54, 0.28), mat);
+      neck.position.set(0.03, 0.49, 0.02); neck.rotation.z = -0.36; g.add(neck);
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.25, 0.36), mat);
+      head.position.set(-0.11, 0.78, 0.10); head.rotation.z = -0.22; g.add(head);
+      const muzzle = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.13, 0.20), dark);
+      muzzle.position.set(-0.18, 0.71, 0.25); g.add(muzzle);
+      for (const dz of [-0.07, 0.07]) {
+        const ear = new THREE.Mesh(new THREE.ConeGeometry(0.048, 0.15, 8), dark);
+        ear.position.set(-0.02, 0.94, dz); g.add(ear);
+      }
+    } else if (type === 'b') {
+      put(new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.24, 0.44, 16), mat), 0.43);
+      put(new THREE.Mesh(new THREE.SphereGeometry(0.20, 16, 12), mat), 0.70);
+      const slit = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.28, 0.40), dark);
+      slit.position.set(0, 0.72, 0); slit.rotation.z = 0.6; g.add(slit);
+      put(new THREE.Mesh(new THREE.SphereGeometry(0.065, 12, 10), dark), 0.92);
+    } else if (type === 'q') {
+      put(new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.26, 0.52, 18), mat), 0.47);
+      put(new THREE.Mesh(new THREE.SphereGeometry(0.20, 18, 14), mat), 0.82);
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        const s = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 8), dark);
+        s.position.set(Math.cos(a) * 0.19, 0.99, Math.sin(a) * 0.19);
+        g.add(s);
+      }
+      put(new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 10), dark), 1.04);
+    } else {
+      put(new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.28, 0.58, 18), mat), 0.50);
+      put(new THREE.Mesh(new THREE.SphereGeometry(0.20, 18, 14), mat), 0.90);
+      const cross = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.30, 0.075), dark);
+      cross.position.y = 1.14; g.add(cross);
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.075, 0.075), dark);
+      bar.position.y = 1.17; g.add(bar);
     }
-    if (head) { if (head.position.y === 0) head.position.y = 0.62; g.add(head); }
     g.scale.setScalar(0.92);
     return g;
   }
