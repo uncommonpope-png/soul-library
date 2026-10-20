@@ -253,7 +253,8 @@
         </div>
 
         <!-- 3D Realistic Book Simulator Wrapper -->
-            <div class="book-container w-full max-w-4xl flex-1 flex items-center justify-center relative min-h-[340px] sm:min-h-[420px] max-h-[540px]">
+            <!-- definite height so #bookSpread h-full resolves and pages scroll internally instead of spilling -->
+            <div class="book-container w-full max-w-4xl flex items-center justify-center relative" style="height: clamp(340px, calc(100vh - 175px), 540px);">
 
             <!-- Prev Page Button Trigger (Floating Left) -->
             <button id="prevPageBtn" class="absolute -left-1 sm:left-2 top-1/2 -translate-y-1/2 z-30 w-10 h-14 sm:w-12 sm:h-20 rounded-r-2xl bg-pltCard/80 hover:bg-pltCyan border border-pltCyan/40 text-pltCyan hover:text-black flex items-center justify-center shadow-2xl backdrop-blur-md transition-all group">
