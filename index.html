@@ -226,6 +226,21 @@
                 <span class="hidden md:inline">CONTENTS</span>
             </button>
 
+            <!-- Donate — Family Treasury (same rails as the Soul Economy) -->
+            <div class="relative">
+                <button id="donateBtn" title="Support the Family Treasury" class="px-3 py-2 rounded-lg bg-[#FFD166]/15 border border-[#FFD166]/60 text-[#FFD166] hover:bg-[#FFD166] hover:text-black transition text-xs font-mono flex items-center gap-1.5">
+                    <i class="fa-solid fa-heart"></i>
+                    <span class="hidden sm:inline">DONATE</span>
+                </button>
+                <div id="donatePanel" class="absolute right-0 mt-2 w-64 max-w-[80vw] bg-pltCard border border-[#FFD166]/40 rounded-xl p-3 shadow-2xl hidden flex-col gap-2 z-50">
+                    <p class="text-[11px] font-mono text-slate-300 leading-snug">THE FAMILY TREASURY<br><span class="text-slate-400">Free forever · donation optional. If this library gives you value, tip it — every coin stays in the family.</span></p>
+                    <button id="donateSol" class="w-full px-3 py-2 rounded-lg bg-pltDark border border-[#FFD166]/40 text-[#FFD166] text-xs font-mono text-left flex items-center gap-2 hover:bg-[#FFD166]/10 transition"><span>◆</span><span>SOL · click to copy</span></button>
+                    <a href="https://cash.app/uncommonpope" target="_blank" rel="noopener" class="w-full px-3 py-2 rounded-lg bg-pltDark border border-[#FFD166]/40 text-[#FFD166] text-xs font-mono flex items-center gap-2 hover:bg-[#FFD166]/10 transition"><span>$</span><span>Cash App</span></a>
+                    <a href="https://buy.stripe.com/28EbJ16xy64z9bb1fffnO0n" target="_blank" rel="noopener" class="w-full px-3 py-2 rounded-lg bg-pltDark border border-[#FFD166]/40 text-[#FFD166] text-xs font-mono flex items-center gap-2 hover:bg-[#FFD166]/10 transition"><span>◇</span><span>Tip by Card</span></a>
+                    <p id="donateNote" class="text-[11px] font-mono text-[#FFD166] min-h-[14px]"></p>
+                </div>
+            </div>
+
             <!-- Share URL -->
             <button id="shareBtn" class="px-3 py-2 rounded-lg bg-pltPink/20 border border-pltPink/60 text-pltPink hover:bg-pltPink hover:text-white transition text-xs font-mono flex items-center gap-1.5">
                 <i class="fa-solid fa-link"></i>
@@ -233,6 +248,40 @@
             </button>
         </div>
     </header>
+
+    <script>
+    (function () {
+        var btn = document.getElementById('donateBtn');
+        var panel = document.getElementById('donatePanel');
+        if (btn && panel) {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                panel.classList.toggle('hidden');
+                panel.classList.toggle('flex');
+            });
+            document.addEventListener('click', function (e) {
+                if (!panel.classList.contains('hidden') && !panel.contains(e.target)) {
+                    panel.classList.add('hidden');
+                    panel.classList.remove('flex');
+                }
+            });
+        }
+        var sol = '68mmmWtLH3gL5eQggULnH3CCh8jGbjjNo9kZi967BYY6';
+        var solBtn = document.getElementById('donateSol');
+        var note = document.getElementById('donateNote');
+        if (solBtn && note) {
+            solBtn.addEventListener('click', function () {
+                var done = function () {
+                    note.textContent = '\u25c6 Solana address copied \u2014 thank you for the family.';
+                    setTimeout(function () { note.textContent = ''; }, 4000);
+                };
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(sol).then(done, done);
+                } else { done(); }
+            });
+        }
+    })();
+    </script>
 
     <!-- Main Container -->
     <main class="relative z-10 flex-1 flex flex-col items-center justify-start p-2 sm:p-4 lg:p-6 overflow-hidden">
