@@ -13,7 +13,9 @@ const PLTChess = (() => {
   let thinkTimer = null;
   let lastMove = null;
 
-  // ---- Chess rules ----
+  // ---- Chess rules: LEGAL chess. Pseudo-legal moves are filtered by king
+  // safety, so a king is never left in check and never captured. Castling
+  // and en passant are real; mate and stalemate are distinguished. ----
   const INIT = [
     'rnbqkbnr', 'pppppppp', '........', '........',
     '........', '........', 'PPPPPPPP', 'RNBQKBNR'
@@ -32,7 +34,58 @@ const PLTChess = (() => {
     K: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]
   };
 
-  function genMoves(bd, r, c) {
+  // Is square (r,c) attacked by color by? Used for check + castling.
+  function isAttacked(bd, r, c, by) {
+    const pp = by === 'w' ? 'P' : 'p';
+    const pr = by === 'w' ? r + 1 : r - 1; // white pawns attack from one row below
+    for (const dc of [-1, 1]) {
+      const cc = c + dc;
+      if (inB(pr, cc) && bd[pr][cc] === pp) return true;
+    }
+    const np = by === 'w' ? 'N' : 'n';
+    for (const [dr, dc] of [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]]) {
+      const r2 = r + dr, c2 = c + dc;
+      if (inB(r2, c2) && bd[r2][c2] === np) return true;
+    }
+    const kp = by === 'w' ? 'K' : 'k';
+    for (const [dr, dc] of DIRS.K) {
+      const r2 = r + dr, c2 = c + dc;
+      if (inB(r2, c2) && bd[r2][c2] === kp) return true;
+    }
+    const rook = by === 'w' ? 'R' : 'r';
+    const bishop = by === 'w' ? 'B' : 'b';
+    const queen = by === 'w' ? 'Q' : 'q';
+    for (const [dr, dc] of DIRS.N) {
+      let r2 = r + dr, c2 = c + dc;
+      while (inB(r2, c2)) {
+        const q = bd[r2][c2];
+        if (q !== '.') { if (q === rook || q === queen) return true; break; }
+        r2 += dr; c2 += dc;
+      }
+    }
+    for (const [dr, dc] of DIRS.B) {
+      let r2 = r + dr, c2 = c + dc;
+      while (inB(r2, c2)) {
+        const q = bd[r2][c2];
+        if (q !== '.') { if (q === bishop || q === queen) return true; break; }
+        r2 += dr; c2 += dc;
+      }
+    }
+    return false;
+  }
+
+  function findKing(bd, t) {
+    const kp = t === 'w' ? 'K' : 'k';
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (bd[r][c] === kp) return [r, c];
+    return null;
+  }
+
+  function inCheck(bd, t) {
+    const k = findKing(bd, t);
+    return k ? isAttacked(bd, k[0], k[1], other(t)) : false;
+  }
+
+  function genMoves(bd, r, c, rights, ep) {
     const p = bd[r][c];
     if (p === '.') return [];
     const t = colorOf(p), out = [];
@@ -45,8 +98,10 @@ const PLTChess = (() => {
       return q === '.'; // can continue sliding if empty
     };
     if (type === 'p') {
-      const d = t === 'w' ? 1 : -1;
-      const home = t === 'w' ? 1 : 6;
+      // White advances toward row 0, black toward row 7. (The old code had
+      // this backwards, which froze every pawn for the whole game.)
+      const d = t === 'w' ? -1 : 1;
+      const home = t === 'w' ? 6 : 1;
       if (inB(r + d, c) && bd[r + d][c] === '.') {
         out.push([r, c, r + d, c]);
         if (r === home && bd[r + 2 * d][c] === '.') out.push([r, c, r + 2 * d, c]);
@@ -55,11 +110,29 @@ const PLTChess = (() => {
         const r2 = r + d, c2 = c + dc;
         if (inB(r2, c2) && bd[r2][c2] !== '.' && colorOf(bd[r2][c2]) !== t)
           out.push([r, c, r2, c2]);
+        // en passant: diagonal onto the empty ep square captures the pawn behind
+        if (ep && r2 === ep[0] && c2 === ep[1]) out.push([r, c, r2, c2]);
       }
     } else if (type === 'n') {
       for (const [dr, dc] of [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]]) push(r + dr, c + dc);
     } else if (type === 'k') {
       for (const [dr, dc] of DIRS.K) push(r + dr, c + dc);
+      // castling: king + rook unmoved, squares empty, king not in, through,
+      // or into check. (King safety on the destination is re-checked by the
+      // legal-move filter; the transit squares are checked here.)
+      const row = t === 'w' ? 7 : 0;
+      const rk = t === 'w' ? 'K' : 'k';
+      const rook = t === 'w' ? 'R' : 'r';
+      if (rights && r === row && c === 4 && bd[r][c] === rk && !inCheck(bd, t)) {
+        const ks = t === 'w' ? rights.wk : rights.bk;
+        const qs = t === 'w' ? rights.wq : rights.bq;
+        if (ks && bd[row][5] === '.' && bd[row][6] === '.' && bd[row][7] === rook &&
+            !isAttacked(bd, row, 5, other(t)) && !isAttacked(bd, row, 6, other(t)))
+          out.push([r, c, row, 6]);
+        if (qs && bd[row][3] === '.' && bd[row][2] === '.' && bd[row][1] === '.' && bd[row][0] === rook &&
+            !isAttacked(bd, row, 3, other(t)) && !isAttacked(bd, row, 2, other(t)))
+          out.push([r, c, row, 2]);
+      }
     } else {
       const dirs = type === 'q' ? DIRS.K : (type === 'r' ? DIRS.N : DIRS.B);
       for (const [dr, dc] of dirs) {
@@ -73,25 +146,62 @@ const PLTChess = (() => {
     return out;
   }
 
-  function allMoves(bd, t) {
+  // Pseudo-legal moves (piece movement only, no king safety).
+  function pseudoMoves(bd, t, rights, ep) {
     const out = [];
     for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
       if (bd[r][c] !== '.' && colorOf(bd[r][c]) === t)
-        out.push(...genMoves(bd, r, c));
+        out.push(...genMoves(bd, r, c, rights, ep));
     }
     return out;
   }
 
-  function apply(bd, mv) {
+  // LEGAL moves: pseudo-legal moves that do not leave the own king in check.
+  // This is the rule the old engine lacked — without it kings could be left
+  // en prise and captured, and games ended by king removal, not checkmate.
+  function legalMoves(bd, t, rights, ep) {
+    const out = [];
+    for (const mv of pseudoMoves(bd, t, rights, ep)) {
+      const res = applyMove(bd, mv, rights, ep);
+      if (!inCheck(res.board, t)) out.push(mv);
+    }
+    return out;
+  }
+
+  // Apply a move, returning the new board plus updated castling rights and
+  // en passant square. Handles castling rook moves, en passant captures,
+  // promotion (auto-queen), and rights loss on king/rook moves or captures.
+  function applyMove(bd, mv, rights, ep) {
     const nb = clone(bd);
     const [fr, fc, tr, tc] = mv;
-    let piece = nb[fr][fc];
+    const piece = nb[fr][fc];
+    const t = colorOf(piece);
+    const nr = { wk: rights.wk, wq: rights.wq, bk: rights.bk, bq: rights.bq };
+    if (piece.toLowerCase() === 'k' && Math.abs(tc - fc) === 2) {
+      if (tc === 6) { nb[fr][5] = nb[fr][7]; nb[fr][7] = '.'; }
+      else { nb[fr][3] = nb[fr][0]; nb[fr][0] = '.'; }
+    }
+    if (piece.toLowerCase() === 'p' && fc !== tc && nb[tr][tc] === '.') {
+      nb[fr][tc] = '.'; // en passant victim sits behind the target square
+    }
     nb[tr][tc] = piece;
     nb[fr][fc] = '.';
-    // promotion
     if (piece.toLowerCase() === 'p' && (tr === 0 || tr === 7))
-      nb[tr][tc] = colorOf(piece) === 'w' ? 'Q' : 'q';
-    return nb;
+      nb[tr][tc] = t === 'w' ? 'Q' : 'q';
+    if (piece === 'K') { nr.wk = false; nr.wq = false; }
+    if (piece === 'k') { nr.bk = false; nr.bq = false; }
+    if (piece === 'R' && fr === 7 && fc === 0) nr.wq = false;
+    if (piece === 'R' && fr === 7 && fc === 7) nr.wk = false;
+    if (piece === 'r' && fr === 0 && fc === 0) nr.bq = false;
+    if (piece === 'r' && fr === 0 && fc === 7) nr.bk = false;
+    const captured = bd[tr][tc];
+    if (captured === 'R' && tr === 7 && tc === 0) nr.wq = false;
+    if (captured === 'R' && tr === 7 && tc === 7) nr.wk = false;
+    if (captured === 'r' && tr === 0 && tc === 0) nr.bq = false;
+    if (captured === 'r' && tr === 0 && tc === 7) nr.bk = false;
+    let nep = null;
+    if (piece.toLowerCase() === 'p' && Math.abs(tr - fr) === 2) nep = [(fr + tr) / 2, fc];
+    return { board: nb, rights: nr, ep: nep };
   }
 
   const VAL = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
@@ -107,15 +217,19 @@ const PLTChess = (() => {
     return s;
   }
 
-  // Minimax with alpha-beta. Returns best move for side to move.
-  function search(bd, depth, alpha, beta, t) {
+  // Minimax with alpha-beta over LEGAL moves. No legal moves with the king
+  // in check is checkmate; no legal moves without check is stalemate (draw).
+  function search(bd, depth, alpha, beta, t, rights, ep) {
     if (depth === 0) return { score: evaluate(bd), move: null };
-    const moves = allMoves(bd, t);
-    if (!moves.length) return { score: t === 'w' ? -99999 : 99999, move: null };
+    const moves = legalMoves(bd, t, rights, ep);
+    if (!moves.length) {
+      if (!inCheck(bd, t)) return { score: 0, move: null }; // stalemate
+      return { score: t === 'w' ? -99999 : 99999, move: null }; // checkmate
+    }
     let best = null;
     for (const mv of moves) {
-      const nb = apply(bd, mv);
-      const { score } = search(nb, depth - 1, alpha, beta, other(t));
+      const res = applyMove(bd, mv, rights, ep);
+      const { score } = search(res.board, depth - 1, alpha, beta, other(t), res.rights, res.ep);
       if (t === 'w') {
         if (score > alpha) { alpha = score; best = mv; }
       } else {
@@ -242,7 +356,8 @@ const PLTChess = (() => {
   const pieceMeshes = {}; // "r,c" -> mesh
 
   function resetGame() {
-    state = { board: clone(INIT), turn: 'w', over: false };
+    state = { board: clone(INIT), turn: 'w', over: false, result: null,
+      rights: { wk: true, wq: true, bk: true, bq: true }, ep: null };
     lastMove = null;
     for (const k in pieceMeshes) if (boardGroup && pieceMeshes[k].parent) boardGroup.remove(pieceMeshes[k]);
     for (const k in pieceMeshes) delete pieceMeshes[k];
@@ -286,23 +401,50 @@ const PLTChess = (() => {
 
   function aiTurn() {
     if (!state || state.over) return;
-    const { move } = search(state.board, 2, -Infinity, Infinity, state.turn);
-    if (!move) { state.over = true; return; }
-    const [fr, fc, tr, tc] = move;
-    // remove captured
-    if (state.board[tr][tc] !== '.') {
-      const cap = pieceMeshes[tr + ',' + tc];
-      if (cap) boardGroup.remove(cap);
-      delete pieceMeshes[tr + ',' + tc];
+    const { move } = search(state.board, 2, -Infinity, Infinity, state.turn, state.rights, state.ep);
+    if (!move) {
+      // No legal moves: checkmate if in check, stalemate otherwise. The game
+      // ends here — a king is never captured, so no king-loss reset exists.
+      state.over = true;
+      state.result = inCheck(state.board, state.turn) ? 'checkmate' : 'stalemate';
+      const overState = state;
+      thinkTimer = setTimeout(() => {
+        if (state !== overState) return;
+        resetGame();
+        start();
+      }, 4000);
+      return;
     }
-    state.board = apply(state.board, move);
+    const [fr, fc, tr, tc] = move;
+    const piece = state.board[fr][fc];
+    // captured mesh: normal capture sits on the target square; an en passant
+    // victim sits behind it, on the mover's rank.
+    let capKey = null;
+    if (state.board[tr][tc] !== '.') capKey = tr + ',' + tc;
+    else if (piece.toLowerCase() === 'p' && fc !== tc) capKey = fr + ',' + tc;
+    if (capKey) {
+      const cap = pieceMeshes[capKey];
+      if (cap) boardGroup.remove(cap);
+      delete pieceMeshes[capKey];
+    }
+    const res = applyMove(state.board, move, state.rights, state.ep);
+    state.board = res.board; state.rights = res.rights; state.ep = res.ep;
+    // castling rook mesh: reposition synchronously while the king animates.
+    if (piece.toLowerCase() === 'k' && Math.abs(tc - fc) === 2) {
+      const row = fr;
+      const rookFrom = tc === 6 ? 7 : 0, rookTo = tc === 6 ? 5 : 3;
+      const rm = pieceMeshes[row + ',' + rookFrom];
+      if (rm) {
+        const w = worldOf(row, rookTo);
+        rm.position.set(w.x, 0, w.z);
+        delete pieceMeshes[row + ',' + rookFrom];
+        pieceMeshes[row + ',' + rookTo] = rm;
+      }
+    }
     lastMove = move;
     movePiece3D(move, () => {
       moveCount++;
       state.turn = other(state.turn);
-      // restart game if one side is gone (keeps it "always running")
-      const flat = state.board.flat().join('');
-      if (!flat.includes('k') || !flat.includes('K')) resetGame();
       thinkTimer = setTimeout(aiTurn, 900 + Math.random() * 1400);
     });
   }
@@ -330,7 +472,10 @@ const PLTChess = (() => {
       turn: state ? state.turn : null,
       over: state ? !!state.over : null,
       moves: moveCount,
-      animating: !!animating
+      animating: !!animating,
+      inCheck: state ? inCheck(state.board, state.turn) : null,
+      legalMoves: state && !state.over ? legalMoves(state.board, state.turn, state.rights, state.ep).length : 0,
+      result: state ? (state.result || null) : null
     };
   }
 
