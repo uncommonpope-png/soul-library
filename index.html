@@ -147,6 +147,9 @@
             background:
                 radial-gradient(ellipse 70% 60% at 50% 50%, rgba(5,5,10,0.62) 0%, rgba(5,5,10,0.40) 55%, rgba(5,5,10,0.22) 100%);
         }
+        /* Reading mode: hide the heavy 3D background (helps low-end phones) */
+        body.reading-mode #bgCanvas, body.reading-mode #bgVeil { display: none; }
+        #readingModeBtn.reading-on { border-color: #00F0FF; color: #00F0FF; }
         /* ---- Book content typography (data-driven volumes) ---- */
         #leftContent p, #rightContent p { margin: 0 0 0.85em; line-height: 1.75; }
         #leftContent p.pl-sub, #rightContent p.pl-sub { font-style: italic; opacity: .75; margin-top: -0.5em; }
@@ -169,6 +172,7 @@
     <!-- Three.js 3D Background Canvas -->
     <canvas id="bgCanvas"></canvas>
     <div id="bgVeil"></div>
+    <script>try{if(localStorage.getItem('soulLibraryReadingMode')==='1'){document.body.classList.add('reading-mode')}}catch(e){}</script>
 
     <!-- Header Navigation -->
     <header class="relative z-20 flex items-center justify-between px-4 py-3 bg-pltCarbon/90 backdrop-blur-md border-b border-pltCyan/30">
@@ -192,6 +196,11 @@
             <!-- Audio Toggle -->
             <button id="soundBtn" title="Toggle Sound FX" class="w-9 h-9 flex items-center justify-center rounded-lg bg-pltCard border border-slate-700 hover:border-pltCyan text-slate-300 hover:text-pltCyan transition">
                 <i class="fa-solid fa-volume-high" id="soundIcon"></i>
+            </button>
+
+            <!-- Reading Mode: hide the heavy 3D background (helps low-end phones) -->
+            <button id="readingModeBtn" title="Reading mode: hide the 3D background" aria-pressed="false" class="w-9 h-9 flex items-center justify-center rounded-lg bg-pltCard border border-slate-700 hover:border-pltCyan text-slate-300 hover:text-pltCyan transition">
+                <i class="fa-solid fa-book-open"></i>
             </button>
 
             <!-- Reading Theme Switcher -->
@@ -376,7 +385,7 @@
     <div id="shelfModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-lg flex flex-col hidden opacity-0 transition-opacity duration-300">
         <div class="p-4 sm:p-6 flex items-center justify-between border-b border-pltCyan/20">
             <div>
-                <h2 class="text-xl sm:text-2xl font-cinzel font-black tracking-wider text-pltCyan">PLT REPOSITORY // 10 VOLUMES</h2>
+                <h2 class="text-xl sm:text-2xl font-cinzel font-black tracking-wider text-pltCyan">PLT REPOSITORY // 30 VOLUMES</h2>
                 <p class="text-xs font-mono text-slate-400">Select any official doctrine to load into the 3D book simulator</p>
             </div>
             <button id="closeShelfBtn" class="w-10 h-10 rounded-xl bg-pltCard border border-slate-700 text-slate-300 hover:text-white flex items-center justify-center">
@@ -1016,6 +1025,9 @@
 
             if (PLTChess) { try { PLTChess.tick(performance.now()); } catch (e) { window.__chessTickErr = String(e); } }
 
+            // Reading mode: skip the GPU-heavy background render (chess state above still ticks).
+            if (document.body.classList.contains('reading-mode')) return;
+
             if (pMat && pMat.uniforms) {
                 pMat.uniforms.uTime.value = t;
                 // decay the page-turn pulse
@@ -1141,6 +1153,22 @@
                 soundEnabled = !soundEnabled;
                 document.getElementById('soundIcon').className = soundEnabled ? 'fa-solid fa-volume-high text-pltCyan' : 'fa-solid fa-volume-xmark text-slate-500';
             });
+
+            // Reading Mode toggle: hide the heavy 3D background, remember the choice
+            (function () {
+                var btn = document.getElementById('readingModeBtn');
+                if (!btn) return;
+                var apply = function (on) {
+                    document.body.classList.toggle('reading-mode', on);
+                    btn.classList.toggle('reading-on', on);
+                    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+                    try { localStorage.setItem('soulLibraryReadingMode', on ? '1' : '0'); } catch (e) {}
+                };
+                btn.addEventListener('click', function () {
+                    apply(!document.body.classList.contains('reading-mode'));
+                });
+                try { if (localStorage.getItem('soulLibraryReadingMode') === '1') apply(true); } catch (e) {}
+            })();
 
             // Share / Copy Link
             document.getElementById('shareBtn').addEventListener('click', () => {
