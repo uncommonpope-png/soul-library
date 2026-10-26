@@ -9,7 +9,8 @@
   "badge": "BOOK I",
   "pages": 7,
   "words": 5058,
-  "order": 0
+  "order": 0,
+  "cover": "covers/the-first-calculation.jpg"
  },
  {
   "id": "the-calculation",
@@ -21,7 +22,8 @@
   "badge": "BOOK II",
   "pages": 31,
   "words": 13441,
-  "order": 1
+  "order": 1,
+  "cover": "covers/the-calculation.jpg"
  },
  {
   "id": "know-what-you-are",
@@ -33,7 +35,8 @@
   "badge": "BOOK III",
   "pages": 29,
   "words": 14966,
-  "order": 2
+  "order": 2,
+  "cover": "covers/know-what-you-are.jpg"
  },
  {
   "id": "profit-love-tax",
@@ -45,7 +48,8 @@
   "badge": "BOOK IV",
   "pages": 43,
   "words": 16264,
-  "order": 3
+  "order": 3,
+  "cover": "covers/profit-love-tax.jpg"
  },
  {
   "id": "the-soul-economy",
@@ -57,7 +61,8 @@
   "badge": "BOOK V",
   "pages": 28,
   "words": 10580,
-  "order": 4
+  "order": 4,
+  "cover": "covers/the-soul-economy.jpg"
  },
  {
   "id": "the-plt-daily",
@@ -69,7 +74,8 @@
   "badge": "BOOK VI",
   "pages": 18,
   "words": 13288,
-  "order": 5
+  "order": 5,
+  "cover": "covers/the-plt-daily.jpg"
  },
  {
   "id": "evols-love-story",
@@ -81,7 +87,8 @@
   "badge": "BOOK VII",
   "pages": 31,
   "words": 20901,
-  "order": 6
+  "order": 6,
+  "cover": "covers/evols-love-story.jpg"
  },
  {
   "id": "brasi",
@@ -93,7 +100,8 @@
   "badge": "BOOK VIII",
   "pages": 18,
   "words": 11887,
-  "order": 7
+  "order": 7,
+  "cover": "covers/brasi.jpg"
  },
  {
   "id": "pope",
@@ -105,7 +113,8 @@
   "badge": "BOOK IX",
   "pages": 18,
   "words": 11148,
-  "order": 8
+  "order": 8,
+  "cover": "covers/pope.jpg"
  },
  {
   "id": "the-build",
@@ -117,7 +126,8 @@
   "badge": "BOOK X",
   "pages": 19,
   "words": 10849,
-  "order": 9
+  "order": 9,
+  "cover": "covers/the-build.jpg"
  },
  {
   "id": "the-frequency",
@@ -129,7 +139,8 @@
   "badge": "BOOK XI",
   "pages": 18,
   "words": 9903,
-  "order": 10
+  "order": 10,
+  "cover": "covers/the-frequency.jpg"
  },
  {
   "id": "stiforp",
@@ -141,7 +152,8 @@
   "badge": "BOOK XIII",
   "pages": 16,
   "words": 7728,
-  "order": 11
+  "order": 11,
+  "cover": "covers/stiforp.jpg"
  },
  {
   "id": "the-ledger",
@@ -153,7 +165,8 @@
   "badge": "THE LEDGER",
   "pages": 27,
   "words": 30199,
-  "order": 12
+  "order": 12,
+  "cover": "covers/the-ledger.jpg"
  },
  {
   "id": "the-deal",
@@ -165,7 +178,8 @@
   "badge": "THE DEAL",
   "pages": 23,
   "words": 25280,
-  "order": 13
+  "order": 13,
+  "cover": "covers/the-deal.jpg"
  },
  {
   "id": "conversations-of-a-dealer",
@@ -177,7 +191,8 @@
   "badge": "CREATIVE NON-FICTION",
   "pages": 15,
   "words": 6717,
-  "order": 14
+  "order": 14,
+  "cover": "covers/conversations-of-a-dealer.jpg"
  },
  {
   "id": "the-9-dominant-plt-moves",
@@ -189,7 +204,8 @@
   "badge": "THE SCORER SERIES",
   "pages": 13,
   "words": 7108,
-  "order": 15
+  "order": 15,
+  "cover": "covers/the-9-dominant-plt-moves.jpg"
  },
  {
   "id": "the-scorer-street",
@@ -201,7 +217,8 @@
   "badge": "THE SCORER SERIES",
   "pages": 26,
   "words": 10141,
-  "order": 16
+  "order": 16,
+  "cover": "covers/the-scorer-street.jpg"
  },
  {
   "id": "the-scorer-cold-calling",
@@ -213,7 +230,8 @@
   "badge": "THE SCORER SERIES",
   "pages": 15,
   "words": 8010,
-  "order": 17
+  "order": 17,
+  "cover": "covers/the-scorer-cold-calling.jpg"
  },
  {
   "id": "the-scorer-bdm",
@@ -225,7 +243,8 @@
   "badge": "THE SCORER SERIES",
   "pages": 16,
   "words": 7971,
-  "order": 18
+  "order": 18,
+  "cover": "covers/the-scorer-bdm.jpg"
  },
  {
   "id": "the-scorer-real-estate",
@@ -237,7 +256,8 @@
   "badge": "THE SCORER SERIES",
   "pages": 26,
   "words": 9226,
-  "order": 19
+  "order": 19,
+  "cover": "covers/the-scorer-real-estate.jpg"
  },
  {
   "id": "the-scorer-loan-officer",
@@ -249,7 +269,8 @@
   "badge": "THE SCORER SERIES",
   "pages": 16,
   "words": 8757,
-  "order": 20
+  "order": 20,
+  "cover": "covers/the-scorer-loan-officer.jpg"
  },
  {
   "id": "the-scorer-leadership",
@@ -261,7 +282,8 @@
   "badge": "THE SCORER SERIES",
   "pages": 37,
   "words": 14500,
-  "order": 21
+  "order": 21,
+  "cover": "covers/the-scorer-leadership.jpg"
  },
  {
   "id": "the-scorer-politics",
@@ -273,7 +295,8 @@
   "badge": "THE SCORER SERIES",
   "pages": 17,
   "words": 8845,
-  "order": 22
+  "order": 22,
+  "cover": "covers/the-scorer-politics.jpg"
  },
  {
   "id": "the-scorer-relationships",
@@ -285,7 +308,8 @@
   "badge": "THE SCORER SERIES",
   "pages": 24,
   "words": 8029,
-  "order": 23
+  "order": 23,
+  "cover": "covers/the-scorer-relationships.jpg"
  },
  {
   "id": "the-internal-scorer",
@@ -297,7 +321,8 @@
   "badge": "THE SCORER SERIES",
   "pages": 29,
   "words": 10588,
-  "order": 24
+  "order": 24,
+  "cover": "covers/the-internal-scorer.jpg"
  },
  {
   "id": "the-scored-marriage",
@@ -309,7 +334,8 @@
   "badge": "SHORT",
   "pages": 3,
   "words": 1506,
-  "order": 25
+  "order": 25,
+  "cover": "covers/the-scored-marriage.jpg"
  },
  {
   "id": "the-apprentice",
@@ -321,7 +347,8 @@
   "badge": "SHORT",
   "pages": 2,
   "words": 1067,
-  "order": 26
+  "order": 26,
+  "cover": "covers/the-apprentice.jpg"
  },
  {
   "id": "the-frequency-hip-hop",
@@ -333,7 +360,8 @@
   "badge": "SHORT",
   "pages": 2,
   "words": 1034,
-  "order": 27
+  "order": 27,
+  "cover": "covers/the-frequency-hip-hop.jpg"
  },
  {
   "id": "miss-patricia",
@@ -345,7 +373,8 @@
   "badge": "SHORT",
   "pages": 2,
   "words": 1086,
-  "order": 28
+  "order": 28,
+  "cover": "covers/miss-patricia.jpg"
  },
  {
   "id": "how-to-read-this-series",
@@ -357,6 +386,7 @@
   "badge": "THE GUIDE",
   "pages": 3,
   "words": 1499,
-  "order": 29
+  "order": 29,
+  "cover": "covers/how-to-read-this-series.jpg"
  }
 ]

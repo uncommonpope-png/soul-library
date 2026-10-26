@@ -150,6 +150,11 @@
         /* Reading mode: hide the heavy 3D background (helps low-end phones) */
         body.reading-mode #bgCanvas, body.reading-mode #bgVeil { display: none; }
         #readingModeBtn.reading-on { border-color: #00F0FF; color: #00F0FF; }
+        /* Single-page mode (phones): one page fills the spread, no right column */
+        body.single-page #pageRight { display: none; }
+        body.single-page #pageLeft { width: 100%; border-right: none; }
+        body.single-page #spineLine { display: none; }
+        #singlePageBtn.single-on { border-color: #00F0FF; color: #00F0FF; }
         /* ---- Book content typography (data-driven volumes) ---- */
         #leftContent p, #rightContent p { margin: 0 0 0.85em; line-height: 1.75; }
         #leftContent p.pl-sub, #rightContent p.pl-sub { font-style: italic; opacity: .75; margin-top: -0.5em; }
@@ -201,6 +206,11 @@
             <!-- Reading Mode: hide the heavy 3D background (helps low-end phones) -->
             <button id="readingModeBtn" title="Reading mode: hide the 3D background" aria-pressed="false" class="w-9 h-9 flex items-center justify-center rounded-lg bg-pltCard border border-slate-700 hover:border-pltCyan text-slate-300 hover:text-pltCyan transition">
                 <i class="fa-solid fa-book-open"></i>
+            </button>
+
+            <!-- Single-page mode: one page at a time (phones) -->
+            <button id="singlePageBtn" title="Single-page mode: one page at a time" aria-pressed="false" class="w-9 h-9 flex items-center justify-center rounded-lg bg-pltCard border border-slate-700 hover:border-pltCyan text-slate-300 hover:text-pltCyan transition">
+                <i class="fa-solid fa-file-lines"></i>
             </button>
 
             <!-- Reading Theme Switcher -->
@@ -362,7 +372,7 @@
                 </div>
 
                 <!-- Subtle Central Spine Binding Line -->
-                <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-1.5 bg-gradient-to-r from-black/80 via-pltCyan/30 to-black/80 pointer-events-none z-20"></div>
+                <div id="spineLine" class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-1.5 bg-gradient-to-r from-black/80 via-pltCyan/30 to-black/80 pointer-events-none z-20"></div>
             </div>
         </div>
 
@@ -418,6 +428,15 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
+        <!-- In-book search -->
+        <div class="px-4 pt-0 pb-3 border-b border-slate-800">
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                <input type="text" id="inBookSearchInput" placeholder="Search this book..." class="w-full pl-8 pr-8 py-2 bg-pltCard border border-slate-700 rounded-xl text-xs focus:outline-none focus:border-pltCyan font-mono">
+                <button id="inBookSearchClear" title="Clear search" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs hidden">✕</button>
+            </div>
+            <div id="inBookSearchResults" class="mt-2 space-y-1 max-h-64 overflow-y-auto"></div>
+        </div>
         <div id="tocList" class="flex-1 p-4 overflow-y-auto space-y-2 text-sm font-mono">
             <!-- TOC Links injected by JavaScript -->
         </div>
@@ -452,9 +471,59 @@
         }
 
         // State Management
-        let currentPageIndex = 0; // index of left page (left: page, right: page + 1)
+        let currentPageIndex = 0; // spread mode: index of left page; single-page mode: the one page
         let fontSize = 15; // default px
         let soundEnabled = true;
+
+        // Reader mechanics: single-page mode + resume + swipe + in-book search
+        let singlePage = false;
+        function readStored(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+        function writeStored(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
+        function saveResume() {
+            if (!currentBookId) return;
+            writeStored('soulLibraryResume', JSON.stringify({ book: currentBookId, page: currentPageIndex }));
+        }
+        function loadResume() {
+            try {
+                const raw = readStored('soulLibraryResume');
+                if (!raw) return null;
+                const r = JSON.parse(raw);
+                if (r && MANIFEST.some(b => b.id === r.book) && Number.isFinite(r.page)) return r;
+            } catch (e) {}
+            return null;
+        }
+        function applySinglePage(on) {
+            singlePage = !!on;
+            document.body.classList.toggle('single-page', singlePage);
+            const btn = document.getElementById('singlePageBtn');
+            if (btn) {
+                btn.classList.toggle('single-on', singlePage);
+                btn.setAttribute('aria-pressed', singlePage ? 'true' : 'false');
+            }
+            writeStored('soulLibrarySinglePage', singlePage ? '1' : '0');
+        }
+        function initSinglePage() {
+            const stored = readStored('soulLibrarySinglePage');
+            const on = stored !== null ? stored === '1' : window.innerWidth < 768;
+            applySinglePage(on);
+        }
+        function initSwipe() {
+            const spread = document.getElementById('bookSpread');
+            if (!spread) return;
+            let sx = 0, sy = 0, st = 0;
+            spread.addEventListener('touchstart', (e) => {
+                if (!e.touches || !e.touches.length) return;
+                sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now();
+            }, { passive: true });
+            spread.addEventListener('touchend', (e) => {
+                if (!e.changedTouches || !e.changedTouches.length) return;
+                const dx = e.changedTouches[0].clientX - sx;
+                const dy = e.changedTouches[0].clientY - sy;
+                if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && Date.now() - st < 800) {
+                    if (dx < 0) nextPage(); else prevPage();
+                }
+            }, { passive: true });
+        }
 
         // Web Audio Synthesizer (No external mp3 dependencies)
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -521,18 +590,21 @@
             if (!book) return;
             const totalPages = book.pages.length;
 
-            // Ensure even left-page indexing
-            if (currentPageIndex % 2 !== 0) {
+            // Spread mode keeps even left-page indexing; single-page mode steps by 1
+            if (!singlePage && currentPageIndex % 2 !== 0) {
                 currentPageIndex = Math.max(0, currentPageIndex - 1);
             }
+            if (currentPageIndex >= totalPages) currentPageIndex = Math.max(0, totalPages - 1);
 
             const leftPage = book.pages[currentPageIndex];
-            const rightPage = book.pages[currentPageIndex + 1];
+            const rightPage = singlePage ? null : book.pages[currentPageIndex + 1];
 
             // Update Header Meta
             document.getElementById('barBookTitle').innerText = book.title;
             document.getElementById('barSeriesTag').innerText = book.badge;
-            document.getElementById('pageCounterText').innerText = `PAGES ${currentPageIndex + 1}-${Math.min(currentPageIndex + 2, totalPages)} / ${totalPages}`;
+            document.getElementById('pageCounterText').innerText = singlePage
+                ? `PAGE ${currentPageIndex + 1} / ${totalPages}`
+                : `PAGES ${currentPageIndex + 1}-${Math.min(currentPageIndex + 2, totalPages)} / ${totalPages}`;
 
             // Left Page Render
             const leftEl = document.getElementById('leftContent');
@@ -564,7 +636,7 @@
 
             // Update Slider Bounds
             const slider = document.getElementById('pageSlider');
-            slider.max = Math.max(0, totalPages - 2);
+            slider.max = singlePage ? Math.max(0, totalPages - 1) : Math.max(0, totalPages - 2);
             slider.value = currentPageIndex;
 
             // Apply font size
@@ -576,23 +648,29 @@
 
             // Render TOC
             renderTOC();
+
+            // Remember position for resume
+            saveResume();
         }
 
+        function pageStep() { return singlePage ? 1 : 2; }
         function nextPage() {
             const book = currentBook;
-            if (currentPageIndex + 2 < book.pages.length) {
+            const step = pageStep();
+            if (currentPageIndex + step < book.pages.length) {
                 playPageTurnSound();
                 animatePageFlip(1);
-                currentPageIndex += 2;
+                currentPageIndex += step;
                 renderSpread();
             }
         }
 
         function prevPage() {
-            if (currentPageIndex - 2 >= 0) {
+            const step = pageStep();
+            if (currentPageIndex - step >= 0) {
                 playPageTurnSound();
                 animatePageFlip(-1);
-                currentPageIndex -= 2;
+                currentPageIndex -= step;
                 renderSpread();
             }
         }
@@ -636,10 +714,14 @@
 
                 const card = document.createElement('div');
                 card.className = `p-4 rounded-2xl bg-pltCard/90 border border-slate-800 hover:border-pltCyan transition-all cursor-pointer flex flex-col justify-between group hover:-translate-y-1 shadow-xl`;
+                const saved = loadResume();
+                const resumeChip = (saved && saved.book === b.id)
+                    ? `<span class="px-2 py-0.5 rounded bg-pltPink/20 text-pltPink font-bold">↺ RESUME P. ${saved.page + 1}</span>` : '';
                 card.innerHTML = `
+                    ${b.cover ? `<img src="${b.cover}" alt="Cover of ${b.title}" loading="lazy" class="w-full aspect-[2/3] object-cover rounded-xl mb-3 border border-slate-800">` : ''}
                     <div class="space-y-2">
                         <div class="flex items-center justify-between text-[10px] font-mono">
-                            <span class="px-2 py-0.5 rounded bg-slate-800 text-pltCyan font-bold">${b.badge}</span>
+                            <span class="flex items-center gap-1.5"><span class="px-2 py-0.5 rounded bg-slate-800 text-pltCyan font-bold">${b.badge}</span>${resumeChip}</span>
                             <span class="text-slate-500">${b.pages} PAGES</span>
                         </div>
                         <h4 class="font-cinzel font-bold text-white text-base group-hover:text-pltCyan transition-colors">${b.title}</h4>
@@ -650,7 +732,7 @@
                         <i class="fa-solid fa-arrow-right text-pltCyan opacity-0 group-hover:opacity-100 transition-opacity"></i>
                     </div>
                 `;
-                card.onclick = () => selectBook(b.id, 0);
+                card.onclick = () => selectBook(b.id, (saved && saved.book === b.id) ? saved.page : 0);
                 grid.appendChild(card);
             });
         }
@@ -670,12 +752,55 @@
                     <span class="text-[10px] text-slate-500 shrink-0">P. ${idx + 1}</span>
                 `;
                 item.onclick = () => {
-                    currentPageIndex = idx % 2 === 0 ? idx : idx - 1;
+                    currentPageIndex = singlePage ? idx : (idx % 2 === 0 ? idx : idx - 1);
                     playPageTurnSound();
                     renderSpread();
                     toggleToc();
                 };
                 tocList.appendChild(item);
+            });
+        }
+
+        // In-book search: plain-text match across the open volume's pages
+        function stripHtml(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            return (tmp.textContent || '').replace(/\s+/g, ' ').trim();
+        }
+        function runInBookSearch(q) {
+            const box = document.getElementById('inBookSearchResults');
+            const clear = document.getElementById('inBookSearchClear');
+            if (!box) return;
+            const query = (q || '').trim().toLowerCase();
+            if (clear) clear.classList.toggle('hidden', !query);
+            if (!currentBook || query.length < 2) { box.innerHTML = ''; return; }
+            const hits = [];
+            currentBook.pages.forEach((p, idx) => {
+                const text = stripHtml(p.html);
+                const at = text.toLowerCase().indexOf(query);
+                if (at >= 0) {
+                    const start = Math.max(0, at - 60);
+                    const end = Math.min(text.length, at + query.length + 60);
+                    hits.push({ idx, snippet: (start > 0 ? '…' : '') + text.slice(start, end) + (end < text.length ? '…' : '') });
+                }
+            });
+            if (!hits.length) {
+                box.innerHTML = `<p class="text-[11px] font-mono text-slate-500 px-1 py-2">No matches in this book.</p>`;
+                return;
+            }
+            box.innerHTML = hits.map(h => `
+                <button data-page="${h.idx}" class="inbook-hit w-full text-left px-2 py-2 rounded-lg border border-transparent hover:border-pltCyan/40 hover:bg-pltCard text-[11px] font-mono text-slate-300">
+                    <span class="text-pltCyan font-bold">P. ${h.idx + 1}</span>
+                    <span class="text-slate-400"> — ${h.snippet.replace(/</g, '&lt;')}</span>
+                </button>`).join('');
+            box.querySelectorAll('.inbook-hit').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.getAttribute('data-page'), 10);
+                    currentPageIndex = singlePage ? idx : (idx % 2 === 0 ? idx : idx - 1);
+                    playPageTurnSound();
+                    renderSpread();
+                    toggleToc();
+                });
             });
         }
 
@@ -689,13 +814,20 @@
             const hash = window.location.hash.substring(1);
             let id = MANIFEST.length ? MANIFEST[0].id : null;
             let page = 0;
+            let hashBook = false;
             if (hash) {
                 const params = new URLSearchParams(hash);
                 const bookId = params.get('book');
                 const pageNum = parseInt(params.get('page'), 10);
-                if (bookId && MANIFEST.some(b => b.id === bookId)) id = bookId;
-                if (!isNaN(pageNum) && pageNum >= 1) page = Math.max(0, (pageNum - 1) - ((pageNum - 1) % 2));
+                if (bookId && MANIFEST.some(b => b.id === bookId)) { id = bookId; hashBook = true; }
+                if (!isNaN(pageNum) && pageNum >= 1) page = Math.max(0, pageNum - 1);
             }
+            // No deep link? Resume where the reader left off.
+            if (!hashBook) {
+                const saved = loadResume();
+                if (saved) { id = saved.book; page = saved.page; }
+            }
+            if (!singlePage && page % 2 !== 0) page = Math.max(0, page - 1);
             await openBook(id, page);
         }
 
@@ -1106,6 +1238,8 @@
         window.onload = async function () {
             init3D();
             try { await loadManifest(); } catch (e) { console.error('manifest load failed', e); }
+            initSinglePage();
+            initSwipe();
             await loadFromHash();
 
             // Next & Prev Buttons
@@ -1121,7 +1255,7 @@
             // Slider Jump
             document.getElementById('pageSlider').addEventListener('input', (e) => {
                 const val = parseInt(e.target.value, 10);
-                currentPageIndex = val % 2 === 0 ? val : val - 1;
+                currentPageIndex = singlePage ? val : (val % 2 === 0 ? val : val - 1);
                 renderSpread();
             });
 
@@ -1135,6 +1269,23 @@
             // TOC
             document.getElementById('tocBtn').addEventListener('click', toggleToc);
             document.getElementById('closeTocBtn').addEventListener('click', toggleToc);
+
+            // Single-page toggle
+            document.getElementById('singlePageBtn').addEventListener('click', () => {
+                applySinglePage(!singlePage);
+                renderSpread();
+            });
+
+            // In-book search (inside the Contents drawer)
+            document.getElementById('inBookSearchInput').addEventListener('input', (e) => {
+                runInBookSearch(e.target.value);
+            });
+            document.getElementById('inBookSearchClear').addEventListener('click', () => {
+                const inp = document.getElementById('inBookSearchInput');
+                inp.value = '';
+                runInBookSearch('');
+                inp.focus();
+            });
 
             // Font Adjustments
             document.getElementById('fontUpBtn').addEventListener('click', () => {
